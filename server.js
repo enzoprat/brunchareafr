@@ -16,6 +16,23 @@ const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 4399;
 
+/* --- CORS : autorise le site (bruncharea.fr / Vercel) à appeler ce backend --- */
+const ALLOWED_ORIGINS = [
+  'https://bruncharea.fr',
+  'https://www.bruncharea.fr'
+];
+app.use(function (req, res, next) {
+  const origin = req.headers.origin;
+  if (origin && (ALLOWED_ORIGINS.indexOf(origin) !== -1 || /\.vercel\.app$/.test(origin))) {
+    res.set('Access-Control-Allow-Origin', origin);
+    res.set('Vary', 'Origin');
+    res.set('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type');
+  }
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
+
 /* --- Réglages (surchargables par variables d'environnement) --- */
 const SHOP = {
   name: 'BRUNCH AREA',

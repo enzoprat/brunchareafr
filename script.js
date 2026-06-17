@@ -539,7 +539,7 @@
   // statique en local), on bascule sur l'impression locale du bon 80 mm
   // pour ne jamais bloquer le client.
   // ===================================================================
-  const ORDER_API = '/api/orders';
+  const ORDER_API = 'https://brunchareafr.onrender.com/api/orders';
 
   function submitOrder(order) {
     try {
