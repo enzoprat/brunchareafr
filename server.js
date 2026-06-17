@@ -44,6 +44,7 @@ const DEV_ID    = process.env.DEV_ID || 'local_printer'; // device de l'impriman
 const ADMIN_KEY = process.env.ADMIN_KEY || '';            // protège /admin (vide = ouvert)
 const ASCII_ONLY = process.env.ASCII_ONLY === '1';        // 1 = retire les accents du ticket (sécurité thermique)
 const LINE_WIDTH = 42;                                     // colonnes 80 mm (police A)
+const MAX_ATTEMPTS = 2;                                     // nb max d'impressions d'un même job (anti-boucle)
 
 /* ============================================================
    File d'impression (en mémoire)
@@ -200,30 +201,42 @@ app.post('/api/orders', express.json({ limit: '256kb' }), function (req, res) {
 app.post('/print', express.text({ type: function () { return true; }, limit: '1mb' }), function (req, res) {
   const body = req.body || '';
 
-  // L'imprimante confirme le job précédent (printjobid + success)
-  const idMatch = /<printjobid>\s*([^<\s]+)\s*<\/printjobid>/i.exec(body);
-  const okMatch = /success="(true|false)"/i.exec(body);
-  if (idMatch && printing[idMatch[1]]) {
-    const done = printing[idMatch[1]];
-    delete printing[idMatch[1]];
-    const success = !okMatch || okMatch[1] === 'true';
-    if (success) {
+  // L'imprimante confirme le job précédent.
+  // Le printjobid peut arriver en BALISE <printjobid>X</printjobid>
+  // OU en ATTRIBUT printjobid="X" selon le firmware -> on lit les deux.
+  let jobId = null;
+  let m = /<printjobid>\s*([^<\s]+)\s*<\/printjobid>/i.exec(body);
+  if (m) jobId = m[1];
+  else { m = /printjobid\s*=\s*"([^"]+)"/i.exec(body); if (m) jobId = m[1]; }
+
+  // Échec réel seulement si l'imprimante le dit EXPLICITEMENT (success="false").
+  const explicitFail = /success\s*=\s*"false"/i.test(body);
+
+  if (jobId && printing[jobId]) {
+    const done = printing[jobId];
+    delete printing[jobId];
+    if (explicitFail && (done.attempts || 1) < MAX_ATTEMPTS) {
+      queue.unshift(done); // échec déclaré -> un seul ré-essai
+      pushRecent(done.order, 'échec, ré-essai');
+      console.log('[PRINT] FAIL %s (%s) -> ré-essai %d', done.order.number, done.id, (done.attempts || 1) + 1);
+    } else if (explicitFail) {
+      pushRecent(done.order, 'échec (abandon)');
+      console.log('[PRINT] FAIL définitif %s (%s) -> abandon', done.order.number, done.id);
+    } else {
       pushRecent(done.order, 'imprimé');
       console.log('[PRINT] OK   %s (%s)', done.order.number, done.id);
-    } else {
-      queue.unshift(done); // échec -> on remet en tête de file
-      pushRecent(done.order, 'échec, ré-essai');
-      console.log('[PRINT] FAIL %s (%s) -> remis en file', done.order.number, done.id);
     }
   }
 
-  // Filet de sécurité : un job "en cours" depuis trop longtemps (>2 min) = on le remet en file
+  // Filet de sécurité : un job "en cours" sans confirmation depuis >90 s
+  // est considéré comme imprimé (on N'en refait PAS sortir un autre,
+  // pour éviter toute boucle d'impression).
   const now = Date.now();
   Object.keys(printing).forEach(function (k) {
-    if (now - printing[k].sentAt > 120000) {
+    if (now - printing[k].sentAt > 90000) {
       const stuck = printing[k]; delete printing[k];
-      queue.unshift(stuck);
-      console.log('[PRINT] timeout %s -> remis en file', stuck.order.number);
+      pushRecent(stuck.order, 'envoyé (sans confirmation)');
+      console.log('[PRINT] timeout %s -> considéré imprimé (pas de ré-essai)', stuck.order.number);
     }
   });
 
@@ -233,9 +246,10 @@ app.post('/print', express.text({ type: function () { return true; }, limit: '1m
   const next = queue.shift();
   if (!next) return res.send(sdpNoJob());
 
+  next.attempts = (next.attempts || 0) + 1;
   next.sentAt = Date.now();
   printing[next.id] = next;
-  console.log('[PRINT] ->   %s (%s) envoyé à l\'imprimante', next.order.number, next.id);
+  console.log('[PRINT] ->   %s (%s) envoyé à l\'imprimante (tentative %d)', next.order.number, next.id, next.attempts);
   res.send(sdpWithJob(next));
 });
 
