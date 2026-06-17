@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#B7A6E8" />
+
+  <!-- SEO -->
+  <title>Brunch Area | Brunch à Pessac – Produits frais & recettes maison</title>
+  <meta name="description" content="Découvrez Brunch Area à Pessac : brunchs salés et sucrés, pancakes, œufs bénédictes, burgers, boissons maison. Réservez votre table." />
+  <link rel="canonical" href="https://www.bruncharea.fr/" />
+  <meta name="robots" content="index, follow" />
+  <meta name="geo.region" content="FR-33" />
+  <meta name="geo.placename" content="Pessac" />
+  <meta name="geo.position" content="44.8068;-0.6312" />
+  <meta name="ICBM" content="44.8068, -0.6312" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="restaurant" />
+  <meta property="og:site_name" content="Brunch Area" />
+  <meta property="og:title" content="Brunch Area | Le brunch qui fait parler de lui à Pessac" />
+  <meta property="og:description" content="Brunchs salés et sucrés, pancakes généreux, œufs bénédictes, smash burgers. Produits frais & recettes maison à Pessac." />
+  <meta property="og:locale" content="fr_FR" />
+  <meta property="og:url" content="https://www.bruncharea.fr/" />
+  <meta property="og:image" content="og-cover.webp" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Brunch Area | Brunch à Pessac" />
+  <meta name="twitter:description" content="Brunchs salés et sucrés faits maison à Pessac. Réservez votre table." />
+  <meta name="twitter:image" content="og-cover.webp" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <link rel="icon" type="image/webp" href="logo.webp" />
+  <link rel="apple-touch-icon" href="logo.webp" />
+  <link rel="preload" as="image" href="IMG_5112.webp" />
+
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- Données structurées : Restaurant (SEO local) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Restaurant",
+    "name": "Brunch Area",
+    "image": "https://www.bruncharea.fr/og-cover.webp",
+    "url": "https://www.bruncharea.fr/",
+    "telephone": "+33671573272",
+    "servesCuisine": ["Brunch", "Petit-déjeuner", "Fait maison"],
+    "priceRange": "€€",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "20 Avenue Jean Cordier",
+      "addressLocality": "Pessac",
+      "postalCode": "33600",
+      "addressCountry": "FR"
+    },
+    "geo": { "@type": "GeoCoordinates", "latitude": 44.8068, "longitude": -0.6312 },
+    "sameAs": [
+      "https://www.instagram.com/brunchareafr",
+      "https://www.tiktok.com/@brunchareapessac"
+    ],
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.9",
+      "reviewCount": "180"
+    },
+    "openingHoursSpecification": [
+      { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Tuesday","Wednesday","Thursday","Saturday","Sunday"], "opens": "10:30", "closes": "16:30" },
+      { "@type": "OpeningHoursSpecification", "dayOfWeek": "Friday", "opens": "18:00", "closes": "22:00" }
+    ]
+  }
+  </script>
+</head>
+
+<body>
+  <!-- ===== HEADER ===== -->
+  <header class="nav" id="nav">
+    <a href="#hero" class="nav__logo" aria-label="Brunch Area – accueil">
+      <img src="logo.webp" alt="Brunch Area" class="nav__logo-img" width="120" height="120" />
+    </a>
+    <nav class="nav__links" aria-label="Navigation principale">
+      <a href="#incontournables">Incontournables</a>
+      <a href="#menu">Menu</a>
+      <a href="#pourquoi">Pourquoi nous</a>
+      <a href="#galerie">Galerie</a>
+      <a href="#infos">Horaires &amp; accès</a>
+      <a href="https://www.ubereats.com/fr/store/brunch-area/NWaNASS8Rzqz_VbCzN0-iQ" target="_blank" rel="noopener">Commander</a>
+    </nav>
+    <a href="https://www.thefork.fr/restaurant/brunch-area-r850497" target="_blank" rel="noopener" class="btn btn--primary nav__cta">Réserver</a>
+    <button class="nav__cart" id="cartBtn" aria-label="Voir mon panier">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      <span class="nav__cart-badge" id="cartBadge">0</span>
+    </button>
+    <button class="nav__burger" id="navBurger" aria-label="Ouvrir le menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </header>
+
+  <!-- Menu mobile plein écran -->
+  <div class="mobile-menu" id="mobileMenu" aria-hidden="true">
+    <a href="#incontournables">Incontournables</a>
+    <a href="#menu">Le Menu</a>
+    <a href="#pourquoi">Pourquoi nous</a>
+    <a href="#galerie">Galerie</a>
+    <a href="#infos">Horaires &amp; accès</a>
+    <a href="https://www.ubereats.com/fr/store/brunch-area/NWaNASS8Rzqz_VbCzN0-iQ" target="_blank" rel="noopener">Commander en ligne</a>
+    <a href="https://www.thefork.fr/restaurant/brunch-area-r850497" target="_blank" rel="noopener" class="btn btn--primary">Réserver une table</a>
+  </div>
+
+  <main>
+    <!-- ===== HERO ===== -->
+    <section class="hero" id="hero">
+      <div class="hero__bg" aria-hidden="true">
+        <span class="blob blob--1"></span>
+        <span class="blob blob--2"></span>
+        <span class="blob blob--3"></span>
+      </div>
+      <div class="hero__inner">
+        <p class="hero__eyebrow reveal">🥞 Brunch fait maison · Pessac</p>
+        <h1 class="hero__title reveal">Le brunch qui fait<br />parler de lui à <span class="hl">Pessac</span></h1>
+        <p class="hero__sub reveal">Produits frais, recettes maison, pancakes généreux, œufs bénédictes,
+          brunchs salés et sucrés. Ici, tout est fait maison, pour le plaisir du goût.</p>
+        <div class="hero__cta reveal">
+          <a href="https://www.thefork.fr/restaurant/brunch-area-r850497" target="_blank" rel="noopener" class="btn btn--primary btn--lg">Réserver une table</a>
+          <a href="#menu" class="btn btn--ghost btn--lg">Voir le menu</a>
+          <a href="https://www.ubereats.com/fr/store/brunch-area/NWaNASS8Rzqz_VbCzN0-iQ" target="_blank" rel="noopener" class="btn btn--ghost btn--lg">Commander sur Uber Eats</a>
+        </div>
+        <div class="hero__trust reveal">
+          <div class="stars" aria-hidden="true">★★★★★</div>
+          <span><strong>4,9/5</strong> · plus de 180 avis Google</span>
+        </div>
+      </div>
+      <div class="hero__plate" aria-hidden="true">
+        <img src="IMG_5112.webp" alt="" width="600" height="600" fetchpriority="high" />
+      </div>
+      <a href="#social" class="hero__scroll" aria-label="Faire défiler">
+        <span></span>
+      </a>
+    </section>
+
+    <!-- ===== SOCIAL PROOF ===== -->
+    <section class="social" id="social">
+      <div class="social__head reveal">
+        <div class="stars stars--lg" aria-hidden="true">★★★★★</div>
+        <h2>Ils adorent leur brunch chez nous</h2>
+        <p>La note moyenne parle d'elle-même. Voici ce que disent nos clients.</p>
+      </div>
+      <div class="social__stats">
+        <div class="stat reveal"><span class="stat__num" data-count="4.9" data-decimals="1">0</span><span class="stat__label">Note Google</span></div>
+        <div class="stat reveal"><span class="stat__num" data-count="180" data-suffix="+">0</span><span class="stat__label">Avis clients</span></div>
+        <div class="stat reveal"><span class="stat__num" data-count="100" data-suffix="%">0</span><span class="stat__label">Fait maison</span></div>
+        <div class="stat reveal"><span class="stat__num" data-count="6">0</span><span class="stat__label">Jours / 7</span></div>
+      </div>
+      <div class="reviews">
+        <article class="review reveal">
+          <div class="stars">★★★★★</div>
+          <p>« Le meilleur brunch de Pessac sans hésiter. Les pancakes sont énormes et tout est ultra frais. On reviendra ! »</p>
+          <div class="review__author"><span class="avatar">S</span> Sarah L.</div>
+        </article>
+        <article class="review reveal">
+          <div class="stars">★★★★★</div>
+          <p>« Accueil chaleureux, cadre cosy et des assiettes généreuses. Les œufs bénédictes sont à tomber. »</p>
+          <div class="review__author"><span class="avatar">M</span> Mehdi B.</div>
+        </article>
+        <article class="review reveal">
+          <div class="stars">★★★★★</div>
+          <p>« Une vraie pépite. Le Dakasoula et le smash burger valent largement le détour depuis Bordeaux. »</p>
+          <div class="review__author"><span class="avatar">C</span> Camille R.</div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ===== INCONTOURNABLES ===== -->
+    <section class="signatures" id="incontournables">
+      <div class="section-head reveal">
+        <p class="kicker">Les stars de la maison</p>
+        <h2>Nos incontournables</h2>
+        <p class="section-sub">Les plats que nos habitués commandent les yeux fermés.</p>
+      </div>
+      <div class="cards">
+        <article class="card card--tall reveal">
+          <div class="card__media"><img src="IMG_5112.webp" alt="Pancakes maison à la banane, ananas et sirop d'érable" loading="lazy" width="800" height="600" /></div>
+          <div class="card__body">
+            <span class="card__tag">Best-seller</span>
+            <h3>Pancakes</h3>
+            <p>Moelleux et généreux : banane, fruits frais, sirop d'érable et chantilly.</p>
+            <span class="card__price">9,50&nbsp;€</span>
+          </div>
+        </article>
+        <article class="card reveal">
+          <div class="card__media"><img src="IMG_5107.webp" alt="Le Sambi, msemen grillé farci" loading="lazy" width="800" height="600" /></div>
+          <div class="card__body">
+            <span class="card__tag">Signature</span>
+            <h3>Le Sambi</h3>
+            <p>Msemen grillé farci, oignons confits, au choix poulet, viande, saumon ou œufs.</p>
+            <span class="card__price">dès 12,90&nbsp;€</span>
+          </div>
+        </article>
+        <article class="card reveal">
+          <div class="card__media"><img src="IMG_5110.webp" alt="Assiette Brunchie avec œufs, feta, avocat et fruits frais" loading="lazy" width="800" height="600" /></div>
+          <div class="card__body">
+            <span class="card__tag">Healthy</span>
+            <h3>Assiette Brunchie</h3>
+            <p>Œufs, feta, bacon ou saumon, avocat, roquette, fruits du moment et tartines.</p>
+            <span class="card__price">14,50&nbsp;€</span>
+          </div>
+        </article>
+        <article class="card reveal">
+          <div class="card__media"><img src="IMG_5105.webp" alt="Croffle gourmand au chocolat, pistache et chantilly" loading="lazy" width="800" height="600" /></div>
+          <div class="card__body">
+            <span class="card__tag">Sucré</span>
+            <h3>Croffle</h3>
+            <p>Gaufre à base de pâte à croissant, nappage chocolat-pistache et chantilly.</p>
+            <span class="card__price">6,90&nbsp;€</span>
+          </div>
+        </article>
+        <article class="card reveal">
+          <div class="card__media"><img src="IMG_5106.webp" alt="Egg Muffin au bacon et cheddar fondant" loading="lazy" width="800" height="600" /></div>
+          <div class="card__body">
+            <span class="card__tag">Pause salée</span>
+            <h3>Egg Muffin Bacon</h3>
+            <p>Muffin rond, œuf fondant, cheddar et bacon croustillant.</p>
+            <span class="card__price">7,90&nbsp;€</span>
+          </div>
+        </article>
+        <article class="card card--tall reveal">
+          <div class="card__media"><img src="IMG_5108.webp" alt="Pancakes nappés au fruit de la passion et mangue" loading="lazy" width="800" height="600" /></div>
+          <div class="card__body">
+            <span class="card__tag">Sucré</span>
+            <h3>Pancakes Fruités</h3>
+            <p>Nappage fruit de la passion, mangue et ananas. Aussi : Nutella, caramel beurre salé…</p>
+            <span class="card__price">9,50&nbsp;€</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ===== MENU ===== -->
+    <section class="menu" id="menu">
+      <div class="section-head reveal">
+        <p class="kicker">Notre carte</p>
+        <h2>Le Menu</h2>
+        <p class="section-sub">Tout est fait maison, à base de produits frais. Pour le plaisir du goût.</p>
+      </div>
+
+      <div class="menu__filters" id="menuFilters" role="tablist" aria-label="Catégories du menu">
+        <button class="chip is-active" data-cat="all" role="tab">Tout</button>
+        <button class="chip" data-cat="salee" role="tab">Pause salée</button>
+        <button class="chip" data-cat="sucree" role="tab">Pause sucrée</button>
+        <button class="chip" data-cat="boissons" role="tab">Boissons</button>
+        <button class="chip" data-cat="formules" role="tab">Formules</button>
+        <button class="chip" data-cat="extras" role="tab">Extras</button>
+      </div>
+
+      <div class="menu__groups" id="menuGroups">
+        <!-- injecté par script.js -->
+      </div>
+    </section>
+
+    <!-- ===== POURQUOI ===== -->
+    <section class="why" id="pourquoi">
+      <div class="section-head reveal">
+        <p class="kicker">Notre promesse</p>
+        <h2>Pourquoi choisir Brunch Area&nbsp;?</h2>
+      </div>
+      <div class="why__grid">
+        <article class="why__card reveal">
+          <div class="why__icon">🥞</div>
+          <h3>Tout est fait maison</h3>
+          <p>Pancakes, sauces, pâtes, confitures… nos recettes sont préparées sur place, chaque jour.</p>
+        </article>
+        <article class="why__card reveal">
+          <div class="why__icon">🌿</div>
+          <h3>Produits frais</h3>
+          <p>Des ingrédients sélectionnés avec soin pour des assiettes généreuses et savoureuses.</p>
+        </article>
+        <article class="why__card reveal">
+          <div class="why__icon">☕</div>
+          <h3>Ambiance chaleureuse</h3>
+          <p>Un lieu convivial et familial où l'on prend le temps de savourer son brunch.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ===== GALERIE INSTAGRAM ===== -->
+    <section class="gallery" id="galerie">
+      <div class="section-head reveal">
+        <p class="kicker">@brunchareafr</p>
+        <h2>La galerie</h2>
+        <p class="section-sub">Suivez nos dernières créations sur Instagram.</p>
+      </div>
+      <div class="gallery__grid" id="galleryGrid">
+        <!-- injecté par script.js -->
+      </div>
+      <div class="gallery__cta reveal">
+        <a href="https://www.instagram.com/brunchareafr" target="_blank" rel="noopener" class="btn btn--ghost">Suivre @brunchareafr</a>
+      </div>
+    </section>
+
+    <!-- ===== INFOS : HORAIRES + CARTE ===== -->
+    <section class="infos" id="infos">
+      <div class="infos__col reveal">
+        <p class="kicker">Horaires</p>
+        <h2>Quand venir&nbsp;?</h2>
+        <ul class="hours" id="hoursList">
+          <li data-day="2"><span>Mardi</span><span>10h30 – 16h30</span></li>
+          <li data-day="3"><span>Mercredi</span><span>10h30 – 16h30</span></li>
+          <li data-day="4"><span>Jeudi</span><span>10h30 – 16h30</span></li>
+          <li data-day="5"><span>Vendredi</span><span class="hours__new">18h00 – 22h00 <em>Nouveau</em></span></li>
+          <li data-day="6"><span>Samedi</span><span>10h30 – 16h30</span></li>
+          <li data-day="0"><span>Dimanche</span><span>10h30 – 16h30</span></li>
+          <li data-day="1" class="hours--closed"><span>Lundi</span><span>Fermé</span></li>
+        </ul>
+        <p class="infos__status" id="openStatus" aria-live="polite"></p>
+      </div>
+      <div class="infos__col reveal">
+        <p class="kicker">Accès</p>
+        <h2>Où nous trouver</h2>
+        <p class="infos__addr">
+          📍 20 Avenue Jean Cordier<br />33600 Pessac<br /><br />
+          📞 <a href="tel:+33671573272">06 71 57 32 72</a>
+        </p>
+        <div class="map">
+          <iframe
+            title="Carte – Brunch Area, 20 Avenue Jean Cordier, Pessac"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            src="https://www.google.com/maps?q=20+Avenue+Jean+Cordier+33600+Pessac&output=embed"></iframe>
+        </div>
+        <a href="https://www.google.com/maps/dir/?api=1&destination=20+Avenue+Jean+Cordier+33600+Pessac" target="_blank" rel="noopener" class="btn btn--ghost btn--block">Itinéraire Google Maps</a>
+      </div>
+    </section>
+
+    <!-- ===== RESERVATION ===== -->
+    <section class="reserve" id="reservation">
+      <div class="reserve__card reveal">
+        <p class="kicker">Réservation &amp; commande</p>
+        <h2>Réservez votre table</h2>
+        <p class="reserve__sub">Une table pour le week-end&nbsp;? Réservez en ligne en quelques secondes via TheFork. Envie de brunch à la maison&nbsp;? Commandez sur Uber Eats.</p>
+        <div class="reserve__actions">
+          <a href="https://www.thefork.fr/restaurant/brunch-area-r850497" target="_blank" rel="noopener" class="btn btn--primary btn--lg btn--block">
+            Réserver sur TheFork
+          </a>
+          <a href="https://www.ubereats.com/fr/store/brunch-area/NWaNASS8Rzqz_VbCzN0-iQ" target="_blank" rel="noopener" class="btn btn--ghost btn--lg btn--block">
+            Commander sur Uber Eats
+          </a>
+          <a href="tel:+33671573272" class="btn btn--ghost btn--lg btn--block">
+            Réserver par téléphone · 06 71 57 32 72
+          </a>
+        </div>
+        <p class="reserve__note">Pour les groupes et événements privés, appelez-nous directement.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="footer__grid">
+      <div class="footer__brand">
+        <img src="logo.webp" alt="Brunch Area" class="footer__logo" width="140" height="140" />
+        <p>Le brunch fait maison à Pessac. Convivial, généreux, gourmand.</p>
+      </div>
+      <div class="footer__col">
+        <h4>Horaires</h4>
+        <p>Mar–Jeu : 10h30–16h30<br />Ven : 18h00–22h00<br />Sam–Dim : 10h30–16h30<br />Fermé lundi</p>
+      </div>
+      <div class="footer__col">
+        <h4>Contact</h4>
+        <p>
+          20 Avenue Jean Cordier<br />33600 Pessac<br />
+          <a href="tel:+33671573272">06 71 57 32 72</a>
+        </p>
+      </div>
+      <div class="footer__col">
+        <h4>Suivez-nous</h4>
+        <div class="footer__social">
+          <a href="https://www.instagram.com/brunchareafr" target="_blank" rel="noopener">Instagram</a>
+          <a href="https://www.tiktok.com/@brunchareapessac" target="_blank" rel="noopener">TikTok</a>
+          <a href="https://www.google.com/maps/dir/?api=1&destination=20+Avenue+Jean+Cordier+33600+Pessac" target="_blank" rel="noopener">Google Maps</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <span>© <span id="year"></span> Brunch Area · Pessac</span>
+      <span>Fait maison, avec amour 💜</span>
+    </div>
+  </footer>
+
+  <!-- Barre réservation sticky mobile -->
+  <a href="https://www.thefork.fr/restaurant/brunch-area-r850497" target="_blank" rel="noopener" class="sticky-cta" id="stickyCta">
+    <span>Réserver une table</span>
+    <span class="sticky-cta__arrow">→</span>
+  </a>
+
+  <script src="script.js" defer></script>
+</body>
+</html>
