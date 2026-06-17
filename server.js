@@ -347,11 +347,22 @@ app.post('/print', express.text({ type: function () { return true; }, limit: '1m
    Admin : suivi + ticket de test
    ============================================================ */
 function adminAuth(req, res) {
-  if (ADMIN_KEY && req.query.key !== ADMIN_KEY) {
-    res.status(401).send('Clé invalide. Ajoutez ?key=VOTRE_CLE');
-    return false;
+  if (!ADMIN_KEY) return true;                 // pas de clé configurée -> ouvert (dev local)
+  if (req.query.key === ADMIN_KEY) return true; // secours : ?key=… (liens existants)
+
+  // Authentification par fenêtre de connexion native du navigateur (HTTP Basic).
+  // Le mot de passe = ADMIN_KEY ; l'identifiant est libre (ex. "brunch").
+  const header = req.headers.authorization || '';
+  if (header.indexOf('Basic ') === 0) {
+    let decoded = '';
+    try { decoded = Buffer.from(header.slice(6), 'base64').toString('utf8'); } catch (e) { decoded = ''; }
+    const pass = decoded.slice(decoded.indexOf(':') + 1);
+    if (pass === ADMIN_KEY) return true;
   }
-  return true;
+
+  res.set('WWW-Authenticate', 'Basic realm="Brunch Area admin", charset="UTF-8"');
+  res.status(401).send('Accès réservé. Identifiez-vous.');
+  return false;
 }
 
 // Les heures de service (pickupAt / when) sont des heures "murales" Paris
