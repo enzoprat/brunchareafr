@@ -12,6 +12,7 @@
 
 const path = require('path');
 const express = require('express');
+const store = require('./store');
 
 const app = express();
 const PORT = process.env.PORT || 4399;
@@ -89,7 +90,7 @@ function divider() { return '-'.repeat(LINE_WIDTH); }
 /* Construit le document ePOS-Print (ce que l'imprimante sait lire) */
 function buildEpos(order) {
   const created = new Date(order.createdAt || Date.now())
-    .toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    .toLocaleString('fr-FR', { timeZone: 'Europe/Paris', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 
   let b = '';
   b += '<epos-print xmlns="http://www.epson-pos.com/schemas/2011/03/epos-print">';
@@ -148,6 +149,55 @@ function buildEpos(order) {
   return b;
 }
 
+/* Construit le ticket de RÉSERVATION de table */
+function buildEposReservation(resa) {
+  const created = new Date(resa.createdAt || Date.now())
+    .toLocaleString('fr-FR', { timeZone: 'Europe/Paris', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  const cust = resa.customer || {};
+
+  let b = '';
+  b += '<epos-print xmlns="http://www.epson-pos.com/schemas/2011/03/epos-print">';
+
+  // En-tête
+  b += '<text align="center"/>';
+  b += '<text dw="true" dh="true" em="true">' + xmlEsc(clean(SHOP.name)) + '\n</text>';
+  b += '<text dw="false" dh="false" em="false"/>';
+  b += '<text>' + xmlEsc(clean(SHOP.addr1)) + '\n' + xmlEsc(clean(SHOP.addr2)) + '\nTel ' + xmlEsc(SHOP.phone) + '\n</text>';
+  b += '<feed line="1"/>';
+
+  // Bandeau
+  b += '<text reverse="true" em="true"> RESERVATION TABLE \n</text>';
+  b += '<text reverse="false" em="false"/>';
+  b += '<feed line="1"/>';
+
+  // Couverts + horaire (gros)
+  b += '<text dw="true" dh="true" em="true">' + xmlEsc(clean((resa.people || 1) + ' COUV.')) + '\n</text>';
+  b += '<text dw="false" dh="false" em="false"/>';
+  b += '<text em="true">' + xmlEsc(clean((resa.whenLabel || '').toUpperCase())) + '\n</text>';
+  b += '<text em="false"/>';
+  b += '<feed line="1"/>';
+
+  // Détails client
+  b += '<text align="left"/>';
+  b += '<text>Client : ' + xmlEsc(clean(cust.first)) + '\nTel : ' + xmlEsc(clean(cust.phone)) +
+       '\nReserve le ' + xmlEsc(created) + '\nRef : ' + xmlEsc(clean(resa.ref)) + '\n</text>';
+
+  // Note éventuelle
+  if (resa.note) {
+    b += '<text>' + divider() + '\n</text>';
+    b += '<text em="true">** NOTE **\n</text>';
+    b += '<text em="false">' + xmlEsc(clean(resa.note)) + '\n</text>';
+  }
+
+  // Pied + coupe
+  b += '<feed line="1"/>';
+  b += '<text align="center">A bientot chez Brunch Area !\n</text>';
+  b += '<feed line="2"/>';
+  b += '<cut type="feed"/>';
+  b += '</epos-print>';
+  return b;
+}
+
 /* Réponse Server Direct Print : avec un job à imprimer */
 function sdpWithJob(job) {
   return '<?xml version="1.0" encoding="utf-8"?>' +
@@ -189,11 +239,51 @@ app.post('/api/orders', express.json({ limit: '256kb' }), function (req, res) {
   const job = { id: 'JOB_' + (++jobSeq), xml: buildEpos(order), order: order, at: Date.now() };
   queue.push(job);
   pushRecent(order, 'en file');
+  store.addOrder(order);
   console.log('[ORDER] %s — %s — %d article(s) — file: %d',
     order.number, (order.customer && order.customer.first) || '?', order.items.length, queue.length);
 
   res.json({ ok: true, number: order.number, queued: queue.length });
 });
+
+/* ============================================================
+   API : le site envoie une réservation de table
+   ============================================================ */
+app.post('/api/reservations', express.json({ limit: '64kb' }), function (req, res) {
+  const r = req.body || {};
+  const people = parseInt(r.people, 10);
+  if (!r.ref || !r.when || !r.customer || !r.customer.first || !r.customer.phone ||
+      !(people >= 1 && people <= 30)) {
+    return res.status(400).json({ ok: false, error: 'Réservation invalide' });
+  }
+  const resa = {
+    ref: String(r.ref),
+    createdAt: r.createdAt || new Date().toISOString(),
+    when: String(r.when),
+    whenLabel: String(r.whenLabel || ''),
+    people: people,
+    customer: { first: String(r.customer.first).trim(), phone: String(r.customer.phone).trim() },
+    note: (r.note || '').toString().trim()
+  };
+
+  const job = { id: 'JOB_' + (++jobSeq), xml: buildEposReservation(resa), order: resaAsRecent(resa), at: Date.now() };
+  queue.push(job);
+  pushRecent(resaAsRecent(resa), 'résa en file');
+  store.addReservation(resa);
+  console.log('[RESA] %s — %s — %d couv. — %s', resa.ref, resa.customer.first, resa.people, resa.whenLabel);
+
+  res.json({ ok: true, ref: resa.ref, queued: queue.length });
+});
+
+/* Adapte une résa au format utilisé par pushRecent/affichage */
+function resaAsRecent(resa) {
+  return {
+    number: resa.ref,
+    customer: resa.customer,
+    pickupLabel: resa.people + ' couv. · ' + resa.whenLabel,
+    total: 0
+  };
+}
 
 /* ============================================================
    Server Direct Print : l'imprimante interroge ce point
@@ -264,35 +354,158 @@ function adminAuth(req, res) {
   return true;
 }
 
+// Les heures de service (pickupAt / when) sont des heures "murales" Paris
+// au format "AAAA-MM-JJTHH:MM" (sans fuseau). On les lit telles quelles pour
+// éviter tout décalage quand le serveur tourne en UTC (Render). Le fallback
+// r.at est un vrai ISO UTC -> converti vers Paris.
+function isWall(iso) { return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(iso); }
+
+/* Formate en heure (ex. "12h30") */
+function frTime(iso) {
+  if (isWall(iso)) return iso.slice(11, 16).replace(':', 'h');
+  return new Date(iso).toLocaleTimeString('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit' }).replace(':', 'h');
+}
+/* Clé de jour (AAAA-MM-JJ) */
+function dayKey(iso) {
+  if (isWall(iso)) return iso.slice(0, 10);
+  return new Date(iso).toLocaleDateString('fr-CA', { timeZone: 'Europe/Paris' });
+}
+/* Titre de jour lisible (ex. "Dimanche 21 juin") */
+function dayTitle(iso) {
+  const wall = isWall(iso);
+  const d = wall ? new Date(iso.slice(0, 10) + 'T12:00:00Z') : new Date(iso);
+  const t = d.toLocaleDateString('fr-FR', { timeZone: wall ? 'UTC' : 'Europe/Paris', weekday: 'long', day: 'numeric', month: 'long' });
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
+/* Transforme un enregistrement du store en ligne d'affichage */
+function toEntry(r) {
+  if (r.kind === 'order' && r.order) {
+    const o = r.order;
+    const items = (o.items || []).map(function (it) { return (it.qty || 1) + '× ' + it.name; }).join(', ');
+    return {
+      kind: 'order', id: r.id, whenIso: o.pickupAt || r.at,
+      first: (o.customer && o.customer.first) || '', phone: (o.customer && o.customer.phone) || '',
+      summary: items, extra: money(o.total), note: o.note || ''
+    };
+  }
+  if (r.kind === 'resa' && r.resa) {
+    const v = r.resa;
+    return {
+      kind: 'resa', id: r.id, whenIso: v.when || r.at,
+      first: (v.customer && v.customer.first) || '', phone: (v.customer && v.customer.phone) || '',
+      summary: v.people + ' couvert' + (v.people > 1 ? 's' : ''), extra: '', note: v.note || ''
+    };
+  }
+  return null;
+}
+
 app.get('/admin', function (req, res) {
   if (!adminAuth(req, res)) return;
-  const rows = recent.map(function (r) {
-    const o = r.order;
-    return '<tr><td>' + r.at.slice(11, 16) + '</td><td><b>' + xmlEsc(o.number) + '</b></td>' +
-      '<td>' + xmlEsc((o.customer && o.customer.first) || '') + '</td>' +
-      '<td>' + xmlEsc(o.pickupLabel || '') + '</td>' +
-      '<td>' + xmlEsc(money(o.total)) + '</td>' +
-      '<td>' + xmlEsc(r.status) + '</td></tr>';
+  const days = Math.min(31, Math.max(1, parseInt(req.query.days, 10) || 7));
+  const since = new Date(Date.now() - days * 864e5).toISOString();
+  const entries = store.list(since).map(toEntry).filter(Boolean);
+  entries.sort(function (a, b) { return a.whenIso < b.whenIso ? -1 : a.whenIso > b.whenIso ? 1 : 0; });
+
+  // Regroupe par jour de service
+  const groups = [];
+  const byKey = {};
+  entries.forEach(function (e) {
+    const k = dayKey(e.whenIso);
+    if (!byKey[k]) { byKey[k] = { key: k, iso: e.whenIso, items: [] }; groups.push(byKey[k]); }
+    byKey[k].items.push(e);
+  });
+
+  const nbOrders = entries.filter(function (e) { return e.kind === 'order'; }).length;
+  const nbResa = entries.filter(function (e) { return e.kind === 'resa'; }).length;
+  const couverts = entries.filter(function (e) { return e.kind === 'resa'; })
+    .reduce(function (s, e) { return s + (parseInt(e.summary, 10) || 0); }, 0);
+
+  const cards = groups.map(function (g) {
+    const rows = g.items.map(function (e) {
+      const badge = e.kind === 'resa'
+        ? '<span class="tag tag--resa">Résa</span>'
+        : '<span class="tag tag--cmd">Commande</span>';
+      const tel = e.phone ? '<a href="tel:' + xmlEsc(e.phone.replace(/\s/g, '')) + '">' + xmlEsc(e.phone) + '</a>' : '<span class="muted">—</span>';
+      return '<div class="row">' +
+        '<div class="row__time">' + xmlEsc(frTime(e.whenIso)) + '</div>' +
+        '<div class="row__main">' +
+          '<div class="row__top">' + badge + '<b>' + xmlEsc(e.first || '—') + '</b>' +
+            (e.extra ? '<span class="amount">' + xmlEsc(e.extra) + '</span>' : '') + '</div>' +
+          '<div class="row__sum">' + xmlEsc(e.summary || '') + '</div>' +
+          (e.note ? '<div class="row__note">⚠ ' + xmlEsc(e.note) + '</div>' : '') +
+          '<div class="row__tel">📞 ' + tel + ' · <span class="muted">' + xmlEsc(e.id) + '</span></div>' +
+        '</div>' +
+        '<button class="reprint" data-id="' + xmlEsc(e.id) + '" title="Réimprimer">⎙</button>' +
+      '</div>';
+    }).join('');
+    return '<section class="day"><h2>' + xmlEsc(dayTitle(g.iso)) + ' <span class="muted">(' + g.items.length + ')</span></h2>' + rows + '</section>';
   }).join('');
+
   res.send('<!doctype html><html lang="fr"><head><meta charset="utf-8">' +
     '<meta name="viewport" content="width=device-width,initial-scale=1">' +
-    '<title>Brunch Area — Commandes</title><style>' +
-    'body{font-family:system-ui,sans-serif;margin:20px;color:#1a1a2e}' +
-    'h1{font-size:20px}table{border-collapse:collapse;width:100%;font-size:14px}' +
-    'th,td{border:1px solid #ddd;padding:6px 8px;text-align:left}th{background:#f3f0fa}' +
-    'button{font-size:15px;padding:10px 16px;border:0;border-radius:8px;background:#6c4ad6;color:#fff;cursor:pointer}' +
-    '.muted{color:#888}</style></head><body>' +
-    '<h1>Commandes — ' + xmlEsc(SHOP.name) + '</h1>' +
-    '<p><button onclick="t()">Imprimer un ticket de test</button> ' +
-    '<span class="muted">File en attente : ' + queue.length + '</span></p>' +
-    '<table><tr><th>Heure</th><th>N°</th><th>Client</th><th>Retrait</th><th>Total</th><th>Statut</th></tr>' +
-    (rows || '<tr><td colspan="6" class="muted">Aucune commande pour le moment.</td></tr>') +
-    '</table>' +
-    '<script>function t(){var k=new URLSearchParams(location.search).get("key")||"";' +
-    'fetch("/api/test-print"+(k?"?key="+encodeURIComponent(k):""),{method:"POST"})' +
-    '.then(r=>r.json()).then(()=>{alert("Ticket de test envoye. Il sortira de votre imprimante dans quelques secondes.");})' +
-    '.catch(()=>alert("Erreur."));}</script>' +
-    '</body></html>');
+    '<title>Brunch Area — Tableau de bord</title><style>' +
+    ':root{--violet:#6c4ad6;--ink:#1a1a2e}' +
+    '*{box-sizing:border-box}body{font-family:system-ui,-apple-system,sans-serif;margin:0;background:#f6f4fb;color:var(--ink)}' +
+    'header{background:#fff;padding:16px 18px;position:sticky;top:0;box-shadow:0 1px 0 #e7e2f3;z-index:5}' +
+    'h1{font-size:18px;margin:0 0 10px}.stats{display:flex;gap:8px;flex-wrap:wrap;font-size:13px}' +
+    '.stat{background:#f0ecfb;border-radius:10px;padding:6px 10px}.stat b{color:var(--violet)}' +
+    '.bar{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}' +
+    'button{font-size:14px;padding:9px 14px;border:0;border-radius:10px;background:var(--violet);color:#fff;cursor:pointer}' +
+    'button.sec{background:#eee;color:#333}' +
+    'main{padding:14px 14px 60px;max-width:680px;margin:0 auto}' +
+    '.day{margin:0 0 18px}.day h2{font-size:15px;margin:14px 4px 8px}' +
+    '.row{display:flex;gap:10px;align-items:flex-start;background:#fff;border-radius:14px;padding:12px;margin-bottom:8px;box-shadow:0 1px 4px rgba(40,20,80,.06)}' +
+    '.row__time{font-weight:800;font-size:16px;min-width:52px;color:var(--violet)}' +
+    '.row__main{flex:1;min-width:0}.row__top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}' +
+    '.amount{margin-left:auto;font-weight:700}' +
+    '.row__sum{font-size:14px;color:#444;margin-top:2px}' +
+    '.row__note{font-size:13px;color:#9a5; color:#a05a00;background:#fff4e0;border-radius:8px;padding:3px 7px;margin-top:4px;display:inline-block}' +
+    '.row__tel{font-size:13px;margin-top:5px}.row__tel a{color:var(--violet);font-weight:600;text-decoration:none}' +
+    '.tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}' +
+    '.tag--resa{background:#e3f0ff;color:#1668c4}.tag--cmd{background:#e9f7ec;color:#1f8a44}' +
+    '.reprint{background:#f0ecfb;color:var(--violet);font-size:18px;padding:8px 12px;line-height:1}' +
+    '.muted{color:#999}.empty{text-align:center;color:#999;margin-top:40px}' +
+    '</style></head><body>' +
+    '<header><h1>Tableau de bord — ' + xmlEsc(SHOP.name) + '</h1>' +
+      '<div class="stats"><span class="stat"><b>' + nbOrders + '</b> commande' + (nbOrders > 1 ? 's' : '') + '</span>' +
+      '<span class="stat"><b>' + nbResa + '</b> réservation' + (nbResa > 1 ? 's' : '') + '</span>' +
+      '<span class="stat"><b>' + couverts + '</b> couverts</span>' +
+      '<span class="stat">file : <b>' + queue.length + '</b></span></div>' +
+      '<div class="bar"><button onclick="testPrint()">Ticket de test</button>' +
+      '<button class="sec" onclick="location.reload()">Actualiser</button>' +
+      '<button class="sec" onclick="setDays(7)">7 j</button>' +
+      '<button class="sec" onclick="setDays(31)">31 j</button></div>' +
+    '</header><main>' +
+    (cards || '<p class="empty">Aucune commande ni réservation sur la période.</p>') +
+    '</main><script>' +
+    'var K=new URLSearchParams(location.search).get("key")||"";' +
+    'function q(p){return p+(K?(p.indexOf("?")<0?"?":"&")+"key="+encodeURIComponent(K):"");}' +
+    'function setDays(d){location.search="?days="+d+(K?"&key="+encodeURIComponent(K):"");}' +
+    'function testPrint(){fetch(q("/api/test-print"),{method:"POST"}).then(r=>r.json()).then(()=>alert("Ticket de test envoye.")).catch(()=>alert("Erreur."));}' +
+    'document.addEventListener("click",function(e){var b=e.target.closest(".reprint");if(!b)return;' +
+    'b.disabled=true;fetch(q("/api/reprint"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:b.dataset.id})})' +
+    '.then(r=>r.json()).then(function(j){alert(j.ok?"Ticket renvoye a l\\u2019imprimante.":"Introuvable.");b.disabled=false;}).catch(function(){alert("Erreur.");b.disabled=false;});});' +
+    'setTimeout(function(){location.reload();},30000);' +
+    '</script></body></html>');
+});
+
+/* Réimpression d'une commande/réservation déjà enregistrée */
+app.post('/api/reprint', express.json({ limit: '16kb' }), function (req, res) {
+  if (!adminAuth(req, res)) return;
+  const rec = store.getById((req.body && req.body.id) || '');
+  if (!rec) return res.status(404).json({ ok: false, error: 'Introuvable' });
+
+  let xml, label;
+  if (rec.kind === 'resa' && rec.resa) { xml = buildEposReservation(rec.resa); label = resaAsRecent(rec.resa); }
+  else if (rec.kind === 'order' && rec.order) { xml = buildEpos(rec.order); label = rec.order; }
+  else return res.status(400).json({ ok: false, error: 'Type inconnu' });
+
+  const job = { id: 'JOB_' + (++jobSeq), xml: xml, order: label, at: Date.now() };
+  queue.push(job);
+  pushRecent(label, 'réimpression');
+  console.log('[REPRINT] %s -> file: %d', rec.id, queue.length);
+  res.json({ ok: true });
 });
 
 app.post('/api/test-print', function (req, res) {

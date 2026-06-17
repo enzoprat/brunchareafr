@@ -318,8 +318,9 @@
      CLICK & COLLECT — panier, commande, ticket
      =================================================================== */
 
-  // Horaires d'ouverture (minutes depuis minuit). Mar..Dim, ven 18h-22h.
-  const SCHEDULE = { 0: [630, 990], 2: [630, 990], 3: [630, 990], 4: [630, 990], 5: [1080, 1320], 6: [630, 990] };
+  // Horaires d'ouverture (minutes depuis minuit), alignés sur la fiche Google.
+  // Lun fermé · Mar-Jeu & Dim 10h30-15h45 · Ven 18h-22h45 · Sam 10h30-21h30
+  const SCHEDULE = { 0: [630, 945], 2: [630, 945], 3: [630, 945], 4: [630, 945], 5: [1080, 1365], 6: [630, 1290] };
   const LEAD_MIN = 20;   // délai mini de préparation
   const SLOT_STEP = 15;  // pas des créneaux (min)
   const SHOP = {
@@ -654,6 +655,178 @@
     setTimeout(function () { try { frame.contentWindow.print(); } catch (e) { /* ignore */ } }, 250);
   }
 
+  // ===================================================================
+  // RÉSERVATION DE TABLE (formulaire maison -> ticket imprimé)
+  // ===================================================================
+  const RESERVE_API = 'https://brunchareafr.onrender.com/api/reservations';
+  const THEFORK_URL = 'https://www.thefork.fr/restaurant/brunch-area-r850497';
+  const RESA_LEAD_MIN = 60;   // délai mini avant une résa le jour même
+  const RESA_STEP = 30;       // pas des créneaux de résa (min)
+  const RESA_MAX_PEOPLE = 12; // au-delà : appeler le resto
+
+  function injectReserveUI() {
+    const modal = document.createElement('div');
+    modal.className = 'checkout'; modal.id = 'reserveModal';
+    modal.setAttribute('aria-hidden', 'true');
+    modal.innerHTML =
+      '<div class="checkout__overlay" data-close></div>' +
+      '<div class="checkout__card" role="dialog" aria-label="Réserver une table">' +
+        '<button class="checkout__close" data-close aria-label="Fermer">✕</button>' +
+        '<div id="reserveBody"></div>' +
+      '</div>';
+    document.body.appendChild(modal);
+  }
+  function openReserve() { renderReserve(); document.getElementById('reserveModal').classList.add('is-open'); document.body.style.overflow = 'hidden'; }
+  function closeReserve() { document.getElementById('reserveModal').classList.remove('is-open'); document.body.style.overflow = ''; }
+
+  function genResaRef() {
+    const d = new Date();
+    const ymd = String(d.getFullYear()).slice(2) + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+    return 'R-' + ymd + '-' + Math.floor(1000 + Math.random() * 9000);
+  }
+
+  function buildReserveDays() {
+    const now = new Date();
+    const out = [];
+    for (let off = 0; off < 21; off++) {
+      const d = new Date(now); d.setDate(now.getDate() + off);
+      if (!SCHEDULE[d.getDay()]) continue;
+      const value = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      let label = off === 0 ? "Aujourd'hui" : off === 1 ? 'Demain' :
+        d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+      label = label.charAt(0).toUpperCase() + label.slice(1);
+      out.push({ value: value, label: label, day: d.getDay(), off: off });
+    }
+    return out;
+  }
+  function buildReserveTimes(dateStr) {
+    const parts = dateStr.split('-');
+    const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+    const range = SCHEDULE[d.getDay()];
+    if (!range) return [];
+    let start = range[0];
+    const now = new Date();
+    const isToday = d.toDateString() === now.toDateString();
+    if (isToday) {
+      const nowMin = now.getHours() * 60 + now.getMinutes() + RESA_LEAD_MIN;
+      start = Math.max(start, Math.ceil(nowMin / RESA_STEP) * RESA_STEP);
+    }
+    const opts = [];
+    for (let m = start; m <= range[1]; m += RESA_STEP) {
+      const hh = String(Math.floor(m / 60)).padStart(2, '0');
+      const mm = String(m % 60).padStart(2, '0');
+      opts.push({ value: dateStr + 'T' + hh + ':' + mm, label: hh + 'h' + mm });
+    }
+    return opts;
+  }
+
+  function renderReserve() {
+    const body = document.getElementById('reserveBody');
+    const days = buildReserveDays();
+    const peopleOpts = [];
+    for (let p = 1; p <= RESA_MAX_PEOPLE; p++) peopleOpts.push('<option value="' + p + '">' + p + (p === 1 ? ' personne' : ' personnes') + '</option>');
+    const dayOpts = days.map(function (d) { return '<option value="' + d.value + '">' + d.label + '</option>'; }).join('');
+
+    body.innerHTML =
+      '<h3 class="checkout__title">Réserver une table</h3>' +
+      '<p class="checkout__sub">Réservation directe chez ' + SHOP.name + '. Une question groupe/événement ? Appelez le ' + SHOP.phone + '.</p>' +
+      '<form id="reserveForm" class="checkout__form" novalidate>' +
+        '<div class="field"><label for="rv-first">Prénom</label>' +
+          '<input id="rv-first" name="first" type="text" autocomplete="given-name" required placeholder="Votre prénom" /></div>' +
+        '<div class="field"><label for="rv-phone">Téléphone</label>' +
+          '<input id="rv-phone" name="phone" type="tel" autocomplete="tel" required placeholder="06 00 00 00 00" /></div>' +
+        '<div class="field"><label for="rv-people">Nombre de personnes</label>' +
+          '<select id="rv-people" name="people" required>' + peopleOpts.join('') + '</select></div>' +
+        '<div class="field"><label for="rv-date">Jour</label>' +
+          '<select id="rv-date" name="date" required>' + dayOpts + '</select></div>' +
+        '<div class="field field--full"><label for="rv-time">Heure</label>' +
+          '<select id="rv-time" name="time" required></select></div>' +
+        '<div class="field field--full"><label for="rv-note">Note (optionnel)</label>' +
+          '<input id="rv-note" name="note" type="text" placeholder="Chaise haute, allergie, occasion…" /></div>' +
+        '<button type="submit" class="btn btn--primary btn--lg btn--block">Confirmer la réservation</button>' +
+        '<p class="checkout__legal">Réservation transmise directement au restaurant. ' +
+          'Vous préférez TheFork ? <a href="' + THEFORK_URL + '" target="_blank" rel="noopener">Réserver via TheFork</a>.</p>' +
+      '</form>';
+
+    const dateSel = document.getElementById('rv-date');
+    const timeSel = document.getElementById('rv-time');
+    function refreshTimes() {
+      const times = buildReserveTimes(dateSel.value);
+      timeSel.innerHTML = times.length
+        ? times.map(function (o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('')
+        : '<option value="">Complet ce jour</option>';
+    }
+    dateSel.addEventListener('change', refreshTimes);
+    refreshTimes();
+    document.getElementById('reserveForm').addEventListener('submit', onSubmitReserve);
+  }
+
+  function onSubmitReserve(e) {
+    e.preventDefault();
+    const form = e.target;
+    if (!form.checkValidity()) { form.reportValidity(); return; }
+    const fd = new FormData(form);
+    const whenIso = fd.get('time');
+    if (!whenIso) { alert('Aucun créneau disponible ce jour, choisissez-en un autre.'); return; }
+    const resa = {
+      ref: genResaRef(),
+      createdAt: new Date().toISOString(),
+      when: whenIso,
+      whenLabel: new Date(whenIso).toLocaleString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }),
+      people: parseInt(fd.get('people'), 10),
+      customer: { first: fd.get('first').trim(), phone: fd.get('phone').trim() },
+      note: (fd.get('note') || '').trim()
+    };
+    submitReservation(resa);
+  }
+
+  function submitReservation(resa) {
+    showReserveConfirmation(resa);
+    setResaStatus('pending');
+    fetch(RESERVE_API, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(resa)
+    })
+      .then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
+      .then(function () { setResaStatus('sent'); })
+      .catch(function () { setResaStatus('offline'); });
+  }
+
+  function setResaStatus(state) {
+    const el = document.getElementById('resaStatus');
+    if (!el) return;
+    if (state === 'pending') { el.className = 'confirm__status'; el.textContent = 'Transmission au restaurant…'; }
+    else if (state === 'sent') { el.className = 'confirm__status confirm__status--ok'; el.textContent = '✓ Réservation transmise au restaurant. À très vite !'; }
+    else { el.className = 'confirm__status confirm__status--warn'; el.textContent = '⚠ Connexion impossible. Appelez-nous au ' + SHOP.phone + ' pour confirmer.'; }
+  }
+
+  function showReserveConfirmation(resa) {
+    const body = document.getElementById('reserveBody');
+    body.innerHTML =
+      '<div class="confirm">' +
+        '<div class="confirm__check">✓</div>' +
+        '<h3>Réservation confirmée&nbsp;!</h3>' +
+        '<p class="confirm__num">' + resa.people + ' couvert' + (resa.people > 1 ? 's' : '') + '</p>' +
+        '<p class="confirm__pickup"><strong>' + resa.whenLabel + '</strong><br>' + SHOP.addr + '</p>' +
+        '<p class="confirm__status" id="resaStatus">Transmission au restaurant…</p>' +
+        '<div class="confirm__actions">' +
+          '<button class="btn btn--primary btn--block" id="resaClose">Terminer</button>' +
+        '</div>' +
+      '</div>';
+    document.getElementById('resaClose').addEventListener('click', closeReserve);
+  }
+
+  function setupReserve() {
+    injectReserveUI();
+    // Les CTA "Réserver" du site ouvrent notre formulaire (TheFork reste en secours dans la modale)
+    document.querySelectorAll('a[href*="thefork.fr"], #stickyCta').forEach(function (el) {
+      el.addEventListener('click', function (e) { e.preventDefault(); openReserve(); });
+    });
+    document.getElementById('reserveModal').addEventListener('click', function (e) {
+      if (e.target.hasAttribute('data-close')) closeReserve();
+    });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeReserve(); });
+  }
+
   /* ---------- Câblage des événements ---------- */
   function setupCart() {
     injectOrderUI();
@@ -705,5 +878,6 @@
   setupCounters();
   setupHours();
   setupCart();
+  setupReserve();
   observeReveals();
 })();
