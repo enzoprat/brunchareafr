@@ -728,13 +728,15 @@
     const dayOpts = days.map(function (d) { return '<option value="' + d.value + '">' + d.label + '</option>'; }).join('');
 
     body.innerHTML =
-      '<h3 class="checkout__title">Réserver une table</h3>' +
-      '<p class="checkout__sub">Réservation directe chez ' + SHOP.name + '. Une question groupe/événement ? Appelez le ' + SHOP.phone + '.</p>' +
+      '<h3 class="checkout__title">Demander une table</h3>' +
+      '<p class="checkout__sub">Le restaurant vous confirme votre table par email. Une question groupe/événement ? Appelez le ' + SHOP.phone + '.</p>' +
       '<form id="reserveForm" class="checkout__form" novalidate>' +
         '<div class="field"><label for="rv-first">Prénom</label>' +
           '<input id="rv-first" name="first" type="text" autocomplete="given-name" required placeholder="Votre prénom" /></div>' +
         '<div class="field"><label for="rv-phone">Téléphone</label>' +
           '<input id="rv-phone" name="phone" type="tel" autocomplete="tel" required placeholder="06 00 00 00 00" /></div>' +
+        '<div class="field field--full"><label for="rv-email">Email</label>' +
+          '<input id="rv-email" name="email" type="email" autocomplete="email" required placeholder="vous@email.com" /></div>' +
         '<div class="field"><label for="rv-people">Nombre de personnes</label>' +
           '<select id="rv-people" name="people" required>' + peopleOpts.join('') + '</select></div>' +
         '<div class="field"><label for="rv-date">Jour</label>' +
@@ -743,8 +745,8 @@
           '<select id="rv-time" name="time" required></select></div>' +
         '<div class="field field--full"><label for="rv-note">Note (optionnel)</label>' +
           '<input id="rv-note" name="note" type="text" placeholder="Chaise haute, allergie, occasion…" /></div>' +
-        '<button type="submit" class="btn btn--primary btn--lg btn--block">Confirmer la réservation</button>' +
-        '<p class="checkout__legal">Réservation transmise directement au restaurant. ' +
+        '<button type="submit" class="btn btn--primary btn--lg btn--block">Envoyer ma demande</button>' +
+        '<p class="checkout__legal">Votre demande est transmise au restaurant, qui vous <strong>confirme (ou non) par email</strong>. ' +
           'Vous préférez TheFork ? <a href="' + THEFORK_URL + '" target="_blank" rel="noopener">Réserver via TheFork</a>.</p>' +
       '</form>';
 
@@ -774,7 +776,7 @@
       when: whenIso,
       whenLabel: new Date(whenIso).toLocaleString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }),
       people: parseInt(fd.get('people'), 10),
-      customer: { first: fd.get('first').trim(), phone: fd.get('phone').trim() },
+      customer: { first: fd.get('first').trim(), phone: fd.get('phone').trim(), email: fd.get('email').trim() },
       note: (fd.get('note') || '').trim()
     };
     submitReservation(resa);
@@ -794,9 +796,9 @@
   function setResaStatus(state) {
     const el = document.getElementById('resaStatus');
     if (!el) return;
-    if (state === 'pending') { el.className = 'confirm__status'; el.textContent = 'Transmission au restaurant…'; }
-    else if (state === 'sent') { el.className = 'confirm__status confirm__status--ok'; el.textContent = '✓ Réservation transmise au restaurant. À très vite !'; }
-    else { el.className = 'confirm__status confirm__status--warn'; el.textContent = '⚠ Connexion impossible. Appelez-nous au ' + SHOP.phone + ' pour confirmer.'; }
+    if (state === 'pending') { el.className = 'confirm__status'; el.textContent = 'Envoi de la demande…'; }
+    else if (state === 'sent') { el.className = 'confirm__status confirm__status--ok'; el.textContent = '✓ Demande envoyée. Vous recevrez un email de confirmation (ou de refus) sous peu.'; }
+    else { el.className = 'confirm__status confirm__status--warn'; el.textContent = '⚠ Connexion impossible. Appelez-nous au ' + SHOP.phone + ' pour votre demande.'; }
   }
 
   function showReserveConfirmation(resa) {
@@ -804,10 +806,10 @@
     body.innerHTML =
       '<div class="confirm">' +
         '<div class="confirm__check">✓</div>' +
-        '<h3>Réservation confirmée&nbsp;!</h3>' +
+        '<h3>Demande envoyée&nbsp;!</h3>' +
         '<p class="confirm__num">' + resa.people + ' couvert' + (resa.people > 1 ? 's' : '') + '</p>' +
         '<p class="confirm__pickup"><strong>' + resa.whenLabel + '</strong><br>' + SHOP.addr + '</p>' +
-        '<p class="confirm__status" id="resaStatus">Transmission au restaurant…</p>' +
+        '<p class="confirm__status" id="resaStatus">Envoi de la demande…</p>' +
         '<div class="confirm__actions">' +
           '<button class="btn btn--primary btn--block" id="resaClose">Terminer</button>' +
         '</div>' +

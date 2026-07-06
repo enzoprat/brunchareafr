@@ -54,10 +54,23 @@ function add(kind, id, payload) {
 
 /* API publique */
 function addOrder(order) { return add('order', order.number, { order: order }); }
-function addReservation(resa) { return add('resa', resa.ref, { resa: resa }); }
+function addReservation(resa) {
+  if (!resa.status) resa.status = 'pending';
+  return add('resa', resa.ref, { resa: resa });
+}
 
 function getById(id) {
   return records.find(function (r) { return r.id === id; }) || null;
+}
+
+// Met à jour le statut d'une réservation ('pending' | 'confirmed' | 'refused')
+function setStatus(id, status) {
+  const r = records.find(function (x) { return x.id === id; });
+  if (!r || !r.resa) return null;
+  r.resa.status = status;
+  r.status = status;
+  persist();
+  return r;
 }
 
 // Renvoie les enregistrements depuis `sinceIso` (par défaut : 7 jours glissants),
@@ -69,4 +82,4 @@ function list(sinceIso) {
 
 load();
 
-module.exports = { addOrder: addOrder, addReservation: addReservation, getById: getById, list: list, DATA_FILE: DATA_FILE };
+module.exports = { addOrder: addOrder, addReservation: addReservation, getById: getById, setStatus: setStatus, list: list, DATA_FILE: DATA_FILE };

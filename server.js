@@ -47,6 +47,14 @@ const ASCII_ONLY = process.env.ASCII_ONLY === '1';        // 1 = retire les acce
 const LINE_WIDTH = 42;                                     // colonnes 80 mm (police A)
 const MAX_ATTEMPTS = 2;                                     // nb max d'impressions d'un même job (anti-boucle)
 
+/* --- Email de réservation (via Brevo — gratuit 300 mails/jour) --- */
+const MAIL = {
+  apiKey:    process.env.BREVO_API_KEY || '',   // clé API Brevo (sinon email désactivé)
+  fromEmail: process.env.MAIL_FROM || '',        // expéditeur vérifié dans Brevo
+  fromName:  process.env.MAIL_FROM_NAME || SHOP.name,
+  bcc:       process.env.MAIL_BCC || ''          // copie au resto (optionnel)
+};
+
 /* ============================================================
    File d'impression (en mémoire)
    ============================================================ */
@@ -166,7 +174,7 @@ function buildEposReservation(resa) {
   b += '<feed line="1"/>';
 
   // Bandeau
-  b += '<text reverse="true" em="true"> RESERVATION TABLE \n</text>';
+  b += '<text reverse="true" em="true"> DEMANDE A CONFIRMER \n</text>';
   b += '<text reverse="false" em="false"/>';
   b += '<feed line="1"/>';
 
@@ -180,7 +188,8 @@ function buildEposReservation(resa) {
   // Détails client
   b += '<text align="left"/>';
   b += '<text>Client : ' + xmlEsc(clean(cust.first)) + '\nTel : ' + xmlEsc(clean(cust.phone)) +
-       '\nReserve le ' + xmlEsc(created) + '\nRef : ' + xmlEsc(clean(resa.ref)) + '\n</text>';
+       (cust.email ? '\nEmail : ' + xmlEsc(clean(cust.email)) : '') +
+       '\nDemande le ' + xmlEsc(created) + '\nRef : ' + xmlEsc(clean(resa.ref)) + '\n</text>';
 
   // Note éventuelle
   if (resa.note) {
@@ -191,11 +200,94 @@ function buildEposReservation(resa) {
 
   // Pied + coupe
   b += '<feed line="1"/>';
-  b += '<text align="center">A bientot chez Brunch Area !\n</text>';
+  b += '<text align="center" em="true">A confirmer ou refuser\ndepuis le tableau de bord\n</text>';
+  b += '<text em="false"/>';
   b += '<feed line="2"/>';
   b += '<cut type="feed"/>';
   b += '</epos-print>';
   return b;
+}
+
+/* ============================================================
+   Email de réservation au client (confirmation / refus)
+   ============================================================ */
+function escHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function reservationEmailContent(resa, decision) {
+  const confirmed = decision === 'confirm';
+  const first = resa.customer && resa.customer.first ? resa.customer.first : '';
+  const people = (resa.people || 1) + ' couvert' + ((resa.people || 1) > 1 ? 's' : '');
+  const when = resa.whenLabel || '';
+  const subject = confirmed
+    ? 'Votre réservation chez ' + SHOP.name + ' est confirmée'
+    : 'Votre demande de réservation chez ' + SHOP.name;
+
+  const intro = confirmed
+    ? 'Bonne nouvelle ! Nous avons le plaisir de <strong>confirmer votre réservation</strong>.'
+    : 'Nous vous remercions pour votre demande, mais nous ne pouvons malheureusement <strong>pas y donner suite</strong> pour ce créneau (complet). N\'hésitez pas à retenter un autre horaire ou à nous appeler.';
+  const introTxt = confirmed
+    ? 'Bonne nouvelle ! Nous confirmons votre reservation.'
+    : 'Nous ne pouvons malheureusement pas donner suite a votre demande pour ce creneau (complet). N\'hesitez pas a retenter un autre horaire ou a nous appeler.';
+
+  const html =
+    '<div style="font-family:system-ui,-apple-system,Segoe UI,sans-serif;max-width:520px;margin:0 auto;color:#1a1a2e">' +
+      '<div style="background:#6c4ad6;color:#fff;padding:20px 24px;border-radius:14px 14px 0 0">' +
+        '<h1 style="margin:0;font-size:20px;letter-spacing:.5px">' + escHtml(SHOP.name) + '</h1></div>' +
+      '<div style="background:#f6f4fb;padding:24px;border-radius:0 0 14px 14px">' +
+        '<p>Bonjour ' + escHtml(first) + ',</p>' +
+        '<p>' + intro + '</p>' +
+        '<table style="width:100%;border-collapse:collapse;margin:16px 0;background:#fff;border-radius:10px;overflow:hidden">' +
+          '<tr><td style="padding:10px 14px;color:#666">Personnes</td><td style="padding:10px 14px;text-align:right;font-weight:700">' + escHtml(people) + '</td></tr>' +
+          '<tr><td style="padding:10px 14px;color:#666;border-top:1px solid #eee">Créneau</td><td style="padding:10px 14px;text-align:right;font-weight:700;border-top:1px solid #eee">' + escHtml(when) + '</td></tr>' +
+          '<tr><td style="padding:10px 14px;color:#666;border-top:1px solid #eee">Référence</td><td style="padding:10px 14px;text-align:right;border-top:1px solid #eee">' + escHtml(resa.ref) + '</td></tr>' +
+        '</table>' +
+        (confirmed ? '<p>Nous vous attendons au ' + escHtml(SHOP.addr1) + ', ' + escHtml(SHOP.addr2) + '. À très vite !</p>' : '') +
+        '<p style="color:#666;font-size:13px;margin-top:20px">' + escHtml(SHOP.name) + ' · ' + escHtml(SHOP.addr1) + ', ' + escHtml(SHOP.addr2) + ' · ' + escHtml(SHOP.phone) + '</p>' +
+      '</div></div>';
+
+  const text =
+    'Bonjour ' + first + ',\n\n' + introTxt + '\n\n' +
+    'Personnes : ' + people + '\nCreneau : ' + when + '\nReference : ' + resa.ref + '\n\n' +
+    SHOP.name + ' - ' + SHOP.addr1 + ', ' + SHOP.addr2 + ' - ' + SHOP.phone + '\n';
+
+  return { subject: subject, html: html, text: text };
+}
+
+async function sendReservationEmail(resa, decision) {
+  const to = resa.customer && resa.customer.email;
+  if (!to) return { ok: false, error: 'pas d\'email client' };
+  if (!MAIL.apiKey || !MAIL.fromEmail) {
+    console.warn('[MAIL] non configuré (BREVO_API_KEY / MAIL_FROM absents) — email non envoyé');
+    return { ok: false, skipped: true };
+  }
+  const c = reservationEmailContent(resa, decision);
+  const payload = {
+    sender: { name: MAIL.fromName, email: MAIL.fromEmail },
+    to: [{ email: to, name: (resa.customer && resa.customer.first) || '' }],
+    subject: c.subject, htmlContent: c.html, textContent: c.text
+  };
+  if (MAIL.bcc) payload.bcc = [{ email: MAIL.bcc }];
+
+  try {
+    const r = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: { 'api-key': MAIL.apiKey, 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!r.ok) {
+      const t = await r.text();
+      console.error('[MAIL] échec %d — %s', r.status, t.slice(0, 300));
+      return { ok: false, error: 'HTTP ' + r.status };
+    }
+    console.log('[MAIL] %s envoyé à %s (%s)', decision, to, resa.ref);
+    return { ok: true };
+  } catch (e) {
+    console.error('[MAIL] erreur réseau —', e.message);
+    return { ok: false, error: e.message };
+  }
 }
 
 /* Réponse Server Direct Print : avec un job à imprimer */
@@ -252,8 +344,9 @@ app.post('/api/orders', express.json({ limit: '256kb' }), function (req, res) {
 app.post('/api/reservations', express.json({ limit: '64kb' }), function (req, res) {
   const r = req.body || {};
   const people = parseInt(r.people, 10);
+  const email = (r.customer && r.customer.email || '').toString().trim();
   if (!r.ref || !r.when || !r.customer || !r.customer.first || !r.customer.phone ||
-      !(people >= 1 && people <= 30)) {
+      !email || !/.+@.+\..+/.test(email) || !(people >= 1 && people <= 30)) {
     return res.status(400).json({ ok: false, error: 'Réservation invalide' });
   }
   const resa = {
@@ -262,8 +355,9 @@ app.post('/api/reservations', express.json({ limit: '64kb' }), function (req, re
     when: String(r.when),
     whenLabel: String(r.whenLabel || ''),
     people: people,
-    customer: { first: String(r.customer.first).trim(), phone: String(r.customer.phone).trim() },
-    note: (r.note || '').toString().trim()
+    customer: { first: String(r.customer.first).trim(), phone: String(r.customer.phone).trim(), email: email },
+    note: (r.note || '').toString().trim(),
+    status: 'pending'
   };
 
   const job = { id: 'JOB_' + (++jobSeq), xml: buildEposReservation(resa), order: resaAsRecent(resa), at: Date.now() };
@@ -405,6 +499,7 @@ function toEntry(r) {
     return {
       kind: 'resa', id: r.id, whenIso: v.when || r.at,
       first: (v.customer && v.customer.first) || '', phone: (v.customer && v.customer.phone) || '',
+      email: (v.customer && v.customer.email) || '', status: v.status || 'pending',
       summary: v.people + ' couvert' + (v.people > 1 ? 's' : ''), extra: '', note: v.note || ''
     };
   }
@@ -433,19 +528,39 @@ app.get('/admin', function (req, res) {
     .reduce(function (s, e) { return s + (parseInt(e.summary, 10) || 0); }, 0);
 
   const cards = groups.map(function (g) {
+    const STATUS = {
+      pending:   ['⏳ En attente', 'st--pending'],
+      confirmed: ['✓ Confirmée', 'st--ok'],
+      refused:   ['✕ Refusée', 'st--no']
+    };
     const rows = g.items.map(function (e) {
       const badge = e.kind === 'resa'
         ? '<span class="tag tag--resa">Résa</span>'
         : '<span class="tag tag--cmd">Commande</span>';
       const tel = e.phone ? '<a href="tel:' + xmlEsc(e.phone.replace(/\s/g, '')) + '">' + xmlEsc(e.phone) + '</a>' : '<span class="muted">—</span>';
+      const mail = e.email ? ' · <a href="mailto:' + xmlEsc(e.email) + '">✉ ' + xmlEsc(e.email) + '</a>' : '';
+
+      let statusPill = '', actions = '';
+      if (e.kind === 'resa') {
+        const s = STATUS[e.status] || STATUS.pending;
+        statusPill = '<span class="st ' + s[1] + '">' + s[0] + '</span>';
+        if (e.status === 'pending') {
+          actions = '<div class="acts">' +
+            '<button class="decide ok" data-id="' + xmlEsc(e.id) + '" data-decision="confirm">Confirmer</button>' +
+            '<button class="decide no" data-id="' + xmlEsc(e.id) + '" data-decision="refuse">Refuser</button>' +
+          '</div>';
+        }
+      }
+
       return '<div class="row">' +
         '<div class="row__time">' + xmlEsc(frTime(e.whenIso)) + '</div>' +
         '<div class="row__main">' +
-          '<div class="row__top">' + badge + '<b>' + xmlEsc(e.first || '—') + '</b>' +
+          '<div class="row__top">' + badge + '<b>' + xmlEsc(e.first || '—') + '</b>' + statusPill +
             (e.extra ? '<span class="amount">' + xmlEsc(e.extra) + '</span>' : '') + '</div>' +
           '<div class="row__sum">' + xmlEsc(e.summary || '') + '</div>' +
           (e.note ? '<div class="row__note">⚠ ' + xmlEsc(e.note) + '</div>' : '') +
-          '<div class="row__tel">📞 ' + tel + ' · <span class="muted">' + xmlEsc(e.id) + '</span></div>' +
+          '<div class="row__tel">📞 ' + tel + mail + ' · <span class="muted">' + xmlEsc(e.id) + '</span></div>' +
+          actions +
         '</div>' +
         '<button class="reprint" data-id="' + xmlEsc(e.id) + '" title="Réimprimer">⎙</button>' +
       '</div>';
@@ -475,8 +590,13 @@ app.get('/admin', function (req, res) {
     '.row__tel{font-size:13px;margin-top:5px}.row__tel a{color:var(--violet);font-weight:600;text-decoration:none}' +
     '.tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}' +
     '.tag--resa{background:#e3f0ff;color:#1668c4}.tag--cmd{background:#e9f7ec;color:#1f8a44}' +
+    '.st{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}' +
+    '.st--pending{background:#fff4e0;color:#a05a00}.st--ok{background:#e9f7ec;color:#1f8a44}.st--no{background:#fdeaea;color:#c22}' +
+    '.acts{display:flex;gap:8px;margin-top:8px}' +
+    '.decide{font-size:13px;padding:7px 14px}.decide.ok{background:#1f8a44}.decide.no{background:#c22}' +
     '.reprint{background:#f0ecfb;color:var(--violet);font-size:18px;padding:8px 12px;line-height:1}' +
     '.muted{color:#999}.empty{text-align:center;color:#999;margin-top:40px}' +
+    '.row__tel a{color:var(--violet);font-weight:600;text-decoration:none}' +
     '</style></head><body>' +
     '<header><h1>Tableau de bord — ' + xmlEsc(SHOP.name) + '</h1>' +
       '<div class="stats"><span class="stat"><b>' + nbOrders + '</b> commande' + (nbOrders > 1 ? 's' : '') + '</span>' +
@@ -497,6 +617,16 @@ app.get('/admin', function (req, res) {
     'document.addEventListener("click",function(e){var b=e.target.closest(".reprint");if(!b)return;' +
     'b.disabled=true;fetch(q("/api/reprint"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:b.dataset.id})})' +
     '.then(r=>r.json()).then(function(j){alert(j.ok?"Ticket renvoye a l\\u2019imprimante.":"Introuvable.");b.disabled=false;}).catch(function(){alert("Erreur.");b.disabled=false;});});' +
+    'document.addEventListener("click",function(e){var b=e.target.closest(".decide");if(!b)return;' +
+    'var d=b.dataset.decision;' +
+    'if(!confirm(d==="confirm"?"Confirmer cette reservation ? Un email de confirmation sera envoye au client.":"Refuser cette reservation ? Un email sera envoye au client.")) return;' +
+    'b.disabled=true;fetch(q("/api/reservations/decision"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:b.dataset.id,decision:d})})' +
+    '.then(r=>r.json()).then(function(j){' +
+    'if(!j.ok){alert("Erreur : "+(j.error||"inconnue"));b.disabled=false;return;}' +
+    'if(j.mail&&j.mail.skipped)alert("Statut mis a jour, mais l\\u2019email n\\u2019est pas configure (BREVO_API_KEY / MAIL_FROM).");' +
+    'else if(j.mail&&!j.mail.ok)alert("Statut mis a jour, mais l\\u2019email n\\u2019a pas pu etre envoye ("+(j.mail.error||"?")+").");' +
+    'else alert(d==="confirm"?"Reservation confirmee, email envoye au client.":"Reservation refusee, email envoye au client.");' +
+    'location.reload();}).catch(function(){alert("Erreur.");b.disabled=false;});});' +
     'setTimeout(function(){location.reload();},30000);' +
     '</script></body></html>');
 });
@@ -517,6 +647,25 @@ app.post('/api/reprint', express.json({ limit: '16kb' }), function (req, res) {
   pushRecent(label, 'réimpression');
   console.log('[REPRINT] %s -> file: %d', rec.id, queue.length);
   res.json({ ok: true });
+});
+
+/* Le resto confirme ou refuse une réservation -> maj statut + email au client */
+app.post('/api/reservations/decision', express.json({ limit: '16kb' }), async function (req, res) {
+  if (!adminAuth(req, res)) return;
+  const id = (req.body && req.body.id) || '';
+  const decision = (req.body && req.body.decision) || '';
+  if (decision !== 'confirm' && decision !== 'refuse') {
+    return res.status(400).json({ ok: false, error: 'Décision invalide' });
+  }
+  const rec = store.getById(id);
+  if (!rec || rec.kind !== 'resa' || !rec.resa) {
+    return res.status(404).json({ ok: false, error: 'Réservation introuvable' });
+  }
+  const status = decision === 'confirm' ? 'confirmed' : 'refused';
+  store.setStatus(id, status);
+  const mail = await sendReservationEmail(rec.resa, decision);
+  console.log('[RESA] %s -> %s (email: %s)', id, status, mail.ok ? 'ok' : (mail.skipped ? 'non configuré' : 'échec'));
+  res.json({ ok: true, status: status, mail: mail });
 });
 
 app.post('/api/test-print', function (req, res) {
