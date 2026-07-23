@@ -12,6 +12,7 @@
 
 const path = require('path');
 const express = require('express');
+const webpush = require('web-push');
 const store = require('./store');
 
 const app = express();
@@ -54,6 +55,40 @@ const MAIL = {
   fromName:  process.env.MAIL_FROM_NAME || SHOP.name,
   bcc:       process.env.MAIL_BCC || ''          // copie au resto (optionnel)
 };
+
+/* --- Notifications Web Push (badge sur l'icône, gratuit) --- */
+const VAPID = {
+  publicKey:  process.env.VAPID_PUBLIC_KEY || '',
+  privateKey: process.env.VAPID_PRIVATE_KEY || '',
+  subject:    process.env.VAPID_SUBJECT || 'mailto:' + (process.env.MAIL_FROM || 'contact@bruncharea.fr')
+};
+const PUSH_ENABLED = !!(VAPID.publicKey && VAPID.privateKey);
+if (PUSH_ENABLED) {
+  webpush.setVapidDetails(VAPID.subject, VAPID.publicKey, VAPID.privateKey);
+} else {
+  console.warn('[PUSH] non configuré (VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY absents) — notifications désactivées');
+}
+
+/* Envoie une notification push à tous les appareils abonnés.
+   Incrémente le compteur "non vus" pour la pastille de l'icône. */
+async function pushNotify(title, body) {
+  if (!PUSH_ENABLED) return;
+  const badge = store.bumpBadge(1);
+  const subs = store.listPushSubs();
+  if (!subs.length) return;
+  const payload = JSON.stringify({ title: title, body: body, badge: badge, url: '/admin' });
+  await Promise.all(subs.map(function (sub) {
+    return webpush.sendNotification(sub, payload).catch(function (err) {
+      // 404/410 = abonnement expiré -> on le retire
+      if (err && (err.statusCode === 404 || err.statusCode === 410)) {
+        store.removePushSub(sub.endpoint);
+        console.log('[PUSH] abonnement expiré retiré');
+      } else {
+        console.error('[PUSH] échec envoi : %s', (err && err.message) || err);
+      }
+    });
+  }));
+}
 
 /* ============================================================
    File d'impression (en mémoire)
@@ -335,6 +370,9 @@ app.post('/api/orders', express.json({ limit: '256kb' }), function (req, res) {
   console.log('[ORDER] %s — %s — %d article(s) — file: %d',
     order.number, (order.customer && order.customer.first) || '?', order.items.length, queue.length);
 
+  const who = (order.customer && order.customer.first) || 'Client';
+  pushNotify('Nouvelle commande', who + ' · ' + order.items.length + ' article' + (order.items.length > 1 ? 's' : '') + ' · ' + money(order.total));
+
   res.json({ ok: true, number: order.number, queued: queue.length });
 });
 
@@ -365,6 +403,8 @@ app.post('/api/reservations', express.json({ limit: '64kb' }), function (req, re
   pushRecent(resaAsRecent(resa), 'résa en file');
   store.addReservation(resa);
   console.log('[RESA] %s — %s — %d couv. — %s', resa.ref, resa.customer.first, resa.people, resa.whenLabel);
+
+  pushNotify('Demande de réservation', resa.customer.first + ' · ' + resa.people + ' couv. · ' + (resa.whenLabel || ''));
 
   res.json({ ok: true, ref: resa.ref, queued: queue.length });
 });
@@ -570,6 +610,9 @@ app.get('/admin', function (req, res) {
 
   res.send('<!doctype html><html lang="fr"><head><meta charset="utf-8">' +
     '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<link rel="manifest" href="/manifest.webmanifest">' +
+    '<meta name="theme-color" content="#6c4ad6">' +
+    '<link rel="apple-touch-icon" href="/icons/icon-192.png">' +
     '<title>Brunch Area — Tableau de bord</title><style>' +
     ':root{--violet:#6c4ad6;--ink:#1a1a2e}' +
     '*{box-sizing:border-box}body{font-family:system-ui,-apple-system,sans-serif;margin:0;background:#f6f4fb;color:var(--ink)}' +
@@ -606,7 +649,8 @@ app.get('/admin', function (req, res) {
       '<div class="bar"><button onclick="testPrint()">Ticket de test</button>' +
       '<button class="sec" onclick="location.reload()">Actualiser</button>' +
       '<button class="sec" onclick="setDays(7)">7 j</button>' +
-      '<button class="sec" onclick="setDays(31)">31 j</button></div>' +
+      '<button class="sec" onclick="setDays(31)">31 j</button>' +
+      '<button id="notifBtn" class="sec" onclick="enableNotifs()" style="display:none">🔔 Activer les notifications</button></div>' +
     '</header><main>' +
     (cards || '<p class="empty">Aucune commande ni réservation sur la période.</p>') +
     '</main><script>' +
@@ -628,7 +672,7 @@ app.get('/admin', function (req, res) {
     'else alert(d==="confirm"?"Reservation confirmee, email envoye au client.":"Reservation refusee, email envoye au client.");' +
     'location.reload();}).catch(function(){alert("Erreur.");b.disabled=false;});});' +
     'setTimeout(function(){location.reload();},30000);' +
-    '</script></body></html>');
+    '</script><script src="/admin-push.js"></script></body></html>');
 });
 
 /* Réimpression d'une commande/réservation déjà enregistrée */
@@ -683,6 +727,37 @@ app.post('/api/test-print', function (req, res) {
   queue.push(job);
   pushRecent(order, 'test en file');
   res.json({ ok: true });
+});
+
+/* ============================================================
+   Notifications push (badge sur l'icône de l'app installée)
+   ============================================================ */
+/* Clé publique VAPID (nécessaire au navigateur pour s'abonner) */
+app.get('/api/push/key', function (req, res) {
+  res.json({ enabled: PUSH_ENABLED, key: VAPID.publicKey });
+});
+
+/* Le dashboard enregistre l'abonnement push de l'appareil */
+app.post('/api/push/subscribe', express.json({ limit: '16kb' }), function (req, res) {
+  if (!adminAuth(req, res)) return;
+  const sub = req.body || {};
+  if (!sub.endpoint || !sub.keys) return res.status(400).json({ ok: false, error: 'Abonnement invalide' });
+  store.addPushSub(sub);
+  console.log('[PUSH] appareil abonné (%d au total)', store.listPushSubs().length);
+  res.json({ ok: true });
+});
+
+/* Le resto a ouvert le dashboard -> on remet la pastille à zéro */
+app.post('/api/push/seen', function (req, res) {
+  if (!adminAuth(req, res)) return;
+  store.resetBadge();
+  res.json({ ok: true, badge: 0 });
+});
+
+/* Le manifest doit être servi avec le bon type MIME */
+app.get('/manifest.webmanifest', function (req, res) {
+  res.type('application/manifest+json');
+  res.sendFile(path.join(__dirname, 'manifest.webmanifest'));
 });
 
 /* ============================================================
