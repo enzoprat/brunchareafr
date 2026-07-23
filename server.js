@@ -548,6 +548,7 @@ function toEntry(r) {
 
 app.get('/admin', function (req, res) {
   if (!adminAuth(req, res)) return;
+  const qkey = req.query.key || ''; // clé à propager au manifest (app installée)
   const days = Math.min(31, Math.max(1, parseInt(req.query.days, 10) || 7));
   const since = new Date(Date.now() - days * 864e5).toISOString();
   const entries = store.list(since).map(toEntry).filter(Boolean);
@@ -610,7 +611,7 @@ app.get('/admin', function (req, res) {
 
   res.send('<!doctype html><html lang="fr"><head><meta charset="utf-8">' +
     '<meta name="viewport" content="width=device-width,initial-scale=1">' +
-    '<link rel="manifest" href="/manifest.webmanifest">' +
+    '<link rel="manifest" href="/manifest.webmanifest' + (qkey ? '?key=' + encodeURIComponent(qkey) : '') + '">' +
     '<meta name="theme-color" content="#6c4ad6">' +
     '<link rel="apple-touch-icon" href="/icons/icon-192.png">' +
     '<title>Brunch Area — Tableau de bord</title><style>' +
@@ -754,10 +755,29 @@ app.post('/api/push/seen', function (req, res) {
   res.json({ ok: true, badge: 0 });
 });
 
-/* Le manifest doit être servi avec le bon type MIME */
+/* Manifest généré à la volée : le start_url embarque la clé admin pour que
+   l'app installée sur l'écran d'accueil s'ouvre déjà authentifiée
+   (sinon elle lance /admin sans clé -> page "Accès réservé"). */
 app.get('/manifest.webmanifest', function (req, res) {
+  const key = req.query.key || '';
+  const start = '/admin' + (key ? '?key=' + encodeURIComponent(key) : '');
   res.type('application/manifest+json');
-  res.sendFile(path.join(__dirname, 'manifest.webmanifest'));
+  res.json({
+    name: 'Brunch Area — Commandes',
+    short_name: 'Brunch Area',
+    description: 'Tableau de bord des commandes et réservations Brunch Area',
+    start_url: start,
+    scope: '/',
+    display: 'standalone',
+    orientation: 'portrait',
+    background_color: '#f6f4fb',
+    theme_color: '#6c4ad6',
+    icons: [
+      { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+      { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+      { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+    ]
+  });
 });
 
 /* ============================================================
