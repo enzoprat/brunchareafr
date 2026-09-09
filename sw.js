@@ -30,6 +30,7 @@ self.addEventListener('push', function (e) {
       badge: '/icons/icon-192.png',
       tag: 'brunch-activity',
       renotify: true,
+      requireInteraction: true, // Android : la notif reste (+ point sur l'icône) jusqu'à ce que le resto la touche
       vibrate: [120, 60, 120],
       data: { url: url }
     });
