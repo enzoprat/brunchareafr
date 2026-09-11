@@ -444,6 +444,11 @@ section { padding: clamp(64px, 9vw, 130px) clamp(20px, 5vw, 48px); }
 .recap-line--total strong { color: var(--violet-deep); font-size: 1.1rem; }
 .checkout__form .btn { grid-column: 1/-1; }
 .checkout__legal { grid-column: 1/-1; font-size: 0.78rem; color: var(--ink-soft); text-align: center; margin: 0; }
+.resa-walkin { grid-column: 1/-1; }
+.resa-walkin__box { margin: 0; padding: 18px 20px; border-radius: var(--radius-sm);
+  background: var(--violet-soft); color: var(--ink); font-size: 0.98rem; line-height: 1.5;
+  text-align: center; border: 1.5px dashed var(--violet); }
+.resa-walkin__box strong { color: var(--violet-deep); }
 
 /* ===== CONFIRMATION ===== */
 .confirm { text-align: center; padding: 10px 0; }

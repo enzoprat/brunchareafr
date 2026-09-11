@@ -11,23 +11,24 @@
       items: [
         { n: 'Smash Burger Classic', d: 'Steaks smashés, cheddar fondant, salade, tomate, sauce crème maison, oignons confits.', p: '12,50 €', alt: '14,90 € avec Patatarea' },
         { n: 'Smash Burger Bacon Fines Herbes', d: 'Cheddar fondant, bacon croustillant, sauce crème maison, salade, tomate, oignons confits.', p: '13,50 €', alt: '15,90 € avec Patatarea' },
-        { n: 'Smash Burger Avocado', d: 'Cheddar fondant, avocat frais, salade, tomate, sauce crème maison, oignons confits.', p: '13,50 €', alt: '15,90 € avec Patatarea' },
+        { n: 'Smash Burger Avocado', d: 'Cheddar fondant, guacamole, salade, tomate, sauce crème maison, oignons confits.', p: '13,50 €', alt: '15,90 € avec Patatarea' },
         { n: 'Smash Burger Chèvre Miel', d: 'Chèvre fondant, miel, salade, tomate, sauce crème maison, oignons confits.', p: '13,50 €', alt: '15,90 € avec Patatarea' },
       ]
     },
     {
       cat: 'salee', emoji: '🥪', title: 'Tartines', note: 'Toutes nos tartines sont servies par deux.',
       items: [
-        { n: 'Tartine Avocat & Saumon Fumé', d: 'Pain au levain toasté à l\'huile d\'olive, avocat frais, saumon fumé et fromage frais.', p: '14,00 €' },
+        { n: 'Tartine Avocat & Saumon Fumé', d: 'Pain au levain toasté à l\'huile d\'olive, guacamole, tomate, saumon fumé et fromage frais.', p: '14,00 €' },
+        { n: 'Tartine Crevettes', d: 'Pain au levain toasté à l\'huile d\'olive, guacamole, tomate, crevettes et fromage frais.', p: '14,00 €' },
+        { n: 'Tartine Burrata', d: 'Pain au levain toasté, guacamole maison, tomate et burrata au pesto.', p: '15,00 €', alt: 'Complément bacon ou saumon au choix' },
         { n: 'Tartine Œuf Bacon', d: 'Pain au levain toasté, œufs brouillés, bacon croustillant, fromage frais, oignons confits et figue.', p: '14,00 €' },
-        { n: 'Tartine Burrata', d: 'Pain au levain toasté, guacamole maison, tomate et burrata au pesto.', p: '15,00 €' },
       ]
     },
     {
       cat: 'salee', emoji: '🍳', title: 'Œufs Bénédictes & Brunchie',
       items: [
         { n: 'Œufs Bénédictes', d: 'Œufs pochés, sauce fromagère maison, sur pains muffins ronds, avec saumon ou bacon au choix.', p: '14,50 €' },
-        { n: 'Assiette Brunchie', d: 'Œufs brouillés ou au plat, feta, bacon ou saumon, roquette, fruits du moment, crème balsamique et tartines.', p: '14,50 €', alt: 'Option veggie avec Patatarea' },
+        { n: 'Assiette Brunchie', d: 'Œufs brouillés ou au plat, feta, roquette, fruits du moment, crème balsamique, ½ avocat et tartines toastées. Protéine au choix : bacon, saumon, crevette, poulet ou burrata (+2 €).', p: '14,50 €', alt: 'Option veggie avec Patatarea' },
       ]
     },
     {
@@ -44,6 +45,7 @@
         { n: 'Bacon', d: 'Bacon croustillant, emmental, béchamel maison.', p: '7,90 €', alt: '10,90 € avec Patatarea' },
         { n: 'Saumon', d: 'Saumon, emmental, béchamel maison.', p: '7,90 €', alt: '10,90 € avec Patatarea' },
         { n: 'Chèvre-Miel', d: 'Chèvre, miel, emmental, béchamel maison.', p: '7,90 €', alt: '10,90 € avec Patatarea' },
+        { n: 'Poulet', d: 'Poulet, emmental, béchamel maison.', p: '7,90 €', alt: '10,90 € avec Patatarea' },
       ]
     },
     {
@@ -63,10 +65,10 @@
       ]
     },
     {
-      cat: 'salee', emoji: '🥯', title: 'Le Crof\'sou', note: 'Sandwich à base de Croffle.',
+      cat: 'salee', emoji: '🥯', title: 'Le Crof\'sou', note: 'Sandwich à base de Croffle. 13,90 € — 16,00 € avec Patatarea.',
       items: [
-        { n: 'Lardons', d: 'Croffle garni de lardon, œuf, fromage frais, tomate et figue.', p: '13,90 €' },
-        { n: 'Saumon', d: 'Croffle garni de saumon, œuf, fromage frais, avocat, tomate et pesto.', p: '13,90 €' },
+        { n: 'Lardons', d: 'Croffle garni de lardons, œuf au plat, fromage frais, tomate et figue.', p: '13,90 €' },
+        { n: 'Saumon ou Crevettes', d: 'Croffle garni de saumon ou crevettes, œuf au plat, fromage frais, tomate et pesto.', p: '13,90 €' },
       ]
     },
     {
@@ -78,6 +80,7 @@
         { n: 'Msemen Nature', d: 'Crêpe feuilletée nature.', p: '2,50 €' },
         { n: 'Croffle', d: 'Gaufre à base de pâte à croissant.', p: '6,90 €' },
         { n: 'Bol de Muesli', d: 'Fromage blanc au muesli, fruits du moment, miel ou sirop d\'érable.', p: '6,90 €' },
+        { n: 'Salade de Fruits', d: 'Salade de fruits du moment.', p: '6,90 €' },
       ]
     },
     {
@@ -95,7 +98,7 @@
         { n: 'Orange Pressé', d: 'Pressé minute.', p: '3,50 €' },
         { n: 'Orange / Fraise', d: '', p: '4,90 €' },
         { n: 'Avocat / Dattes', d: 'Onctueux et énergisant.', p: '5,50 €' },
-        { n: 'Orange / Banane', d: '', p: '4,90 €' },
+        { n: 'Gingembre / Ananas', d: '', p: '4,90 €' },
         { n: 'Bissap', d: 'Boisson d\'hibiscus.', p: '4,90 €' },
       ]
     },
@@ -118,9 +121,17 @@
       ]
     },
     {
+      cat: 'boissons', emoji: '🥤', title: 'Milkshakes',
+      items: [
+        { n: 'Milkshake Chocolat', d: '', p: '5,90 €' },
+        { n: 'Milkshake Vanille', d: '', p: '5,90 €' },
+        { n: 'Milkshake Fraise', d: '', p: '5,90 €' },
+      ]
+    },
+    {
       cat: 'formules', emoji: '✨', title: 'Formule Sucrée', note: 'Le meilleur rapport plaisir-prix pour un brunch sucré complet.',
       items: [
-        { n: 'Formule Sucrée', d: 'Une pause sucrée au choix (Pancakes, Pain perdu, Msemen, Croffle ou Bol de muesli) + une boisson chaude (+1,00 € option chocolat viennois) + un jus d\'orange pressé.', p: '13,90 €' },
+        { n: 'Formule Sucrée', d: 'Une pause sucrée au choix (Pancakes, Pain perdu, Msemen, Croffle, Bol de muesli ou Salade de fruits) + une boisson chaude (+1,00 € option chocolat viennois) + un jus d\'orange pressé.', p: '13,90 €' },
       ]
     },
     {
@@ -295,7 +306,7 @@
 
   /* ---------- HORAIRES : jour courant + statut ---------- */
   function setupHours() {
-    const schedule = { 0: [630, 990], 2: [630, 990], 3: [630, 990], 4: [630, 990], 5: [1080, 1320], 6: [630, 990] }; // minutes
+    const schedule = { 0: [630, 990], 2: [630, 990], 3: [630, 990], 4: [630, 990], 6: [630, 990] }; // minutes — horaires d'hiver (vendredi fermé)
     const now = new Date();
     const day = now.getDay();
     const mins = now.getHours() * 60 + now.getMinutes();
@@ -319,8 +330,8 @@
      =================================================================== */
 
   // Horaires d'ouverture (minutes depuis minuit), alignés sur la fiche Google.
-  // Lun fermé · Mar-Jeu & Dim 10h30-15h45 · Ven 18h-22h45 · Sam 10h30-21h30
-  const SCHEDULE = { 0: [630, 945], 2: [630, 945], 3: [630, 945], 4: [630, 945], 5: [1080, 1365], 6: [630, 1290] };
+  // Horaires d'hiver : Lun & Ven fermés · Mar-Jeu, Sam & Dim 10h30-16h30
+  const SCHEDULE = { 0: [630, 990], 2: [630, 990], 3: [630, 990], 4: [630, 990], 6: [630, 990] };
   const LEAD_MIN = 20;   // délai mini de préparation
   const SLOT_STEP = 15;  // pas des créneaux (min)
   const SHOP = {
@@ -663,6 +674,7 @@
   const RESA_LEAD_MIN = 60;   // délai mini avant une résa le jour même
   const RESA_STEP = 30;       // pas des créneaux de résa (min)
   const RESA_MAX_PEOPLE = 12; // au-delà : appeler le resto
+  const RESA_MIN_PEOPLE = 5;  // en dessous : pas de réservation, venir directement sur place
 
   function injectReserveUI() {
     const modal = document.createElement('div');
@@ -724,12 +736,12 @@
     const body = document.getElementById('reserveBody');
     const days = buildReserveDays();
     const peopleOpts = [];
-    for (let p = 1; p <= RESA_MAX_PEOPLE; p++) peopleOpts.push('<option value="' + p + '">' + p + (p === 1 ? ' personne' : ' personnes') + '</option>');
+    for (let p = 1; p <= RESA_MAX_PEOPLE; p++) peopleOpts.push('<option value="' + p + '"' + (p === RESA_MIN_PEOPLE ? ' selected' : '') + '>' + p + (p === 1 ? ' personne' : ' personnes') + '</option>');
     const dayOpts = days.map(function (d) { return '<option value="' + d.value + '">' + d.label + '</option>'; }).join('');
 
     body.innerHTML =
       '<h3 class="checkout__title">Demander une table</h3>' +
-      '<p class="checkout__sub">Le restaurant vous confirme votre table par email. Une question groupe/événement ? Appelez le ' + SHOP.phone + '.</p>' +
+      '<p class="checkout__sub">Réservation <strong>à partir de ' + RESA_MIN_PEOPLE + ' personnes</strong>. Pour moins, pas besoin de réserver&nbsp;: venez directement sur place&nbsp;! Une question groupe/événement ? Appelez le ' + SHOP.phone + '.</p>' +
       '<form id="reserveForm" class="checkout__form" novalidate>' +
         '<div class="field"><label for="rv-first">Prénom</label>' +
           '<input id="rv-first" name="first" type="text" autocomplete="given-name" required placeholder="Votre prénom" /></div>' +
@@ -739,27 +751,40 @@
           '<input id="rv-email" name="email" type="email" autocomplete="email" required placeholder="vous@email.com" /></div>' +
         '<div class="field"><label for="rv-people">Nombre de personnes</label>' +
           '<select id="rv-people" name="people" required>' + peopleOpts.join('') + '</select></div>' +
-        '<div class="field"><label for="rv-date">Jour</label>' +
-          '<select id="rv-date" name="date" required>' + dayOpts + '</select></div>' +
-        '<div class="field field--full"><label for="rv-time">Heure</label>' +
-          '<select id="rv-time" name="time" required></select></div>' +
-        '<div class="field field--full"><label for="rv-note">Note (optionnel)</label>' +
+        '<div class="field resa-detail"><label for="rv-date">Jour</label>' +
+          '<select id="rv-date" name="date">' + dayOpts + '</select></div>' +
+        '<div class="field field--full resa-detail"><label for="rv-time">Heure</label>' +
+          '<select id="rv-time" name="time"></select></div>' +
+        '<div class="field field--full resa-detail"><label for="rv-note">Note (optionnel)</label>' +
           '<input id="rv-note" name="note" type="text" placeholder="Chaise haute, allergie, occasion…" /></div>' +
-        '<button type="submit" class="btn btn--primary btn--lg btn--block">Envoyer ma demande</button>' +
-        '<p class="checkout__legal">Votre demande est transmise au restaurant, qui vous <strong>confirme (ou non) par email</strong>. ' +
+        '<div class="field field--full resa-walkin" id="rv-walkin" style="display:none">' +
+          '<p class="resa-walkin__box">🎉 <strong>Pas besoin de réserver&nbsp;!</strong><br>' +
+          'Pour moins de ' + RESA_MIN_PEOPLE + ' personnes, venez directement sur place, on vous accueille avec plaisir. ' +
+          'Une question ? Appelez le ' + SHOP.phone + '.</p></div>' +
+        '<button type="submit" class="btn btn--primary btn--lg btn--block resa-detail">Envoyer ma demande</button>' +
+        '<p class="checkout__legal resa-detail">Votre demande est transmise au restaurant, qui vous <strong>confirme (ou non) par email</strong>. ' +
           'Vous préférez TheFork ? <a href="' + THEFORK_URL + '" target="_blank" rel="noopener">Réserver via TheFork</a>.</p>' +
       '</form>';
 
     const dateSel = document.getElementById('rv-date');
     const timeSel = document.getElementById('rv-time');
+    const peopleSel = document.getElementById('rv-people');
     function refreshTimes() {
       const times = buildReserveTimes(dateSel.value);
       timeSel.innerHTML = times.length
         ? times.map(function (o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('')
         : '<option value="">Complet ce jour</option>';
     }
+    // Affiche le formulaire (>= seuil) ou le message "venez sur place" (< seuil)
+    function refreshPeople() {
+      const below = parseInt(peopleSel.value, 10) < RESA_MIN_PEOPLE;
+      document.querySelectorAll('#reserveForm .resa-detail').forEach(function (el) { el.style.display = below ? 'none' : ''; });
+      document.getElementById('rv-walkin').style.display = below ? '' : 'none';
+    }
     dateSel.addEventListener('change', refreshTimes);
+    peopleSel.addEventListener('change', refreshPeople);
     refreshTimes();
+    refreshPeople();
     document.getElementById('reserveForm').addEventListener('submit', onSubmitReserve);
   }
 
@@ -768,6 +793,10 @@
     const form = e.target;
     if (!form.checkValidity()) { form.reportValidity(); return; }
     const fd = new FormData(form);
+    if (parseInt(fd.get('people'), 10) < RESA_MIN_PEOPLE) {
+      alert('Pour moins de ' + RESA_MIN_PEOPLE + ' personnes, pas besoin de réserver : venez directement sur place !');
+      return;
+    }
     const whenIso = fd.get('time');
     if (!whenIso) { alert('Aucun créneau disponible ce jour, choisissez-en un autre.'); return; }
     const resa = {
