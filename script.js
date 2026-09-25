@@ -36,7 +36,6 @@
       items: [
         { n: 'Classique', d: 'Le muffin signature, généreux et fondant.', p: '6,90 €', alt: '9,90 € avec Patatarea' },
         { n: 'Bacon', d: 'Avec bacon croustillant.', p: '7,90 €', alt: '10,90 € avec Patatarea' },
-        { n: 'Saumon', d: 'Avec saumon fumé.', p: '7,90 €', alt: '10,90 € avec Patatarea' },
       ]
     },
     {
@@ -49,10 +48,10 @@
       ]
     },
     {
-      cat: 'salee', emoji: '🌯', title: 'Le Sambi', note: 'Msemen (crêpe du Maghreb) farci. 12,90 € — 16,00 € avec Patatarea.',
+      cat: 'salee', emoji: '🌯', title: 'Le Sahbi', note: 'Msemen (crêpe du Maghreb) farci. 12,90 € — 16,00 € avec Patatarea.',
       items: [
         { n: 'Poulet Mariné / Feta', d: 'Poulet mariné aux épices et huile d\'olive, fromage frais / feta, abricot et oignons confits.', p: '12,90 €' },
-        { n: 'Viande Hachée / Mozza', d: 'Viande hachée marinée aux dattes, boursin / mozzarella et oignons confits.', p: '12,90 €' },
+        { n: 'Viande Hachée / Mozza', d: 'Viande hachée marinée façon tajine, dattes, boursin / mozzarella et oignons confits.', p: '12,90 €' },
         { n: 'Saumon / Feta', d: 'Saumon, feta, herbes fraîches et oignons confits.', p: '12,90 €' },
         { n: 'Œufs Brouillés / Mozza', d: 'Œufs brouillés fondants, cumin, mozzarella et oignons confits.', p: '12,90 €' },
       ]
@@ -76,7 +75,7 @@
       items: [
         { n: 'Pancakes', d: 'Moelleux et généreux, à napper et garnir au choix.', p: '9,50 €' },
         { n: 'Pain Perdu', d: 'Le classique réconfortant, façon maison.', p: '8,50 €' },
-        { n: 'Msemen', d: 'Crêpe feuilletée du Maghreb.', p: '6,90 €' },
+        { n: 'Msemen Gourmand', d: 'Crêpe feuilletée du Maghreb, à base de farine de semoule.', p: '6,90 €' },
         { n: 'Msemen Nature', d: 'Crêpe feuilletée nature.', p: '2,50 €' },
         { n: 'Croffle', d: 'Gaufre à base de pâte à croissant.', p: '6,90 €' },
         { n: 'Bol de Muesli', d: 'Fromage blanc au muesli, fruits du moment, miel ou sirop d\'érable.', p: '6,90 €' },
@@ -107,7 +106,7 @@
       items: [
         { n: 'Thé à la Menthe', d: '', p: '2,50 €' },
         { n: 'Expresso / Allongé', d: '', p: '1,70 €' },
-        { n: 'Capuccino', d: '', p: '3,90 €' },
+        { n: 'Cappuccino', d: '', p: '3,90 €' },
         { n: 'Chocolat Viennois', d: '', p: '4,90 €' },
         { n: 'Moka', d: '', p: '3,90 €' },
       ]
@@ -138,8 +137,7 @@
       cat: 'extras', emoji: '🍟', title: 'Sides',
       items: [
         { n: 'Patatarea', d: 'Pommes grenailles rôties au four, sauce oignons confits et sauce fromagère maison.', p: '5,90 €' },
-        { n: 'Pastels Sénégalaises', d: 'Pastels au bœuf mariné (x4), sauce oignons confits et sauce fromagère maison.', p: '7,50 €' },
-        { n: 'Accras de Morue', d: 'Beignets antillais de morue, herbes et épices (x5), sauces maison.', p: '7,50 €' },
+        { n: 'Pastels Sénégalaises', d: 'Pastels au bœuf mariné (x4), sauce oignons confits.', p: '7,50 €' },
       ]
     },
   ];
@@ -214,7 +212,7 @@
       { src: 'IMG_5112.webp', alt: 'Pancakes banane et sirop d\'érable' },
       { src: 'IMG_5110.webp', alt: 'Assiette Brunchie' },
       { src: 'IMG_5105.webp', alt: 'Croffle gourmand' },
-      { src: 'IMG_5107.webp', alt: 'Le Sambi' },
+      { src: 'IMG_5107.webp', alt: 'Le Sahbi' },
       { src: 'IMG_5111.webp', alt: 'Tablée brunch et jus frais' },
       { src: 'IMG_5106.webp', alt: 'Egg Muffin bacon' },
       { src: 'IMG_5108.webp', alt: 'Pancakes fruit de la passion' },
