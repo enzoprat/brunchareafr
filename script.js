@@ -32,14 +32,14 @@
       ]
     },
     {
-      cat: 'salee', emoji: '🥚', title: 'Egg Muffins',
+      cat: 'salee', emoji: '🥚', title: 'Egg Muffins', q: 'Egg Muffin',
       items: [
         { n: 'Classique', d: 'Le muffin signature, généreux et fondant.', p: '6,90 €', alt: '9,90 € avec Patatarea' },
         { n: 'Bacon', d: 'Avec bacon croustillant.', p: '7,90 €', alt: '10,90 € avec Patatarea' },
       ]
     },
     {
-      cat: 'salee', emoji: '🧀', title: 'Crocs Monsieur', note: 'Tous nos crocs sont préparés avec emmental et béchamel maison.',
+      cat: 'salee', emoji: '🧀', title: 'Crocs Monsieur', q: 'Croc', note: 'Tous nos crocs sont préparés avec emmental et béchamel maison.',
       items: [
         { n: 'Bacon', d: 'Bacon croustillant, emmental, béchamel maison.', p: '7,90 €', alt: '10,90 € avec Patatarea' },
         { n: 'Saumon', d: 'Saumon, emmental, béchamel maison.', p: '7,90 €', alt: '10,90 € avec Patatarea' },
@@ -48,7 +48,7 @@
       ]
     },
     {
-      cat: 'salee', emoji: '🌯', title: 'Le Sahbi', note: 'Msemen (crêpe du Maghreb) farci. 12,90 € — 16,00 € avec Patatarea.',
+      cat: 'salee', emoji: '🌯', title: 'Le Sahbi', q: 'Sahbi', note: 'Msemen (crêpe du Maghreb) farci. 12,90 € — 16,00 € avec Patatarea.',
       items: [
         { n: 'Poulet Mariné / Feta', d: 'Poulet mariné aux épices et huile d\'olive, fromage frais / feta, abricot et oignons confits.', p: '12,90 €' },
         { n: 'Viande Hachée / Mozza', d: 'Viande hachée marinée façon tajine, dattes, boursin / mozzarella et oignons confits.', p: '12,90 €' },
@@ -57,14 +57,14 @@
       ]
     },
     {
-      cat: 'salee', emoji: '🥞', title: 'Le Dakasoula', note: 'Pancakes faits maison (x3), guacamole, oignons confits, sauce crème maison, cheddar, œuf au plat et sirop d\'érable.',
+      cat: 'salee', emoji: '🥞', title: 'Le Dakasoula', q: 'Dakasoula', note: 'Pancakes faits maison (x3), guacamole, oignons confits, sauce crème maison, cheddar, œuf au plat et sirop d\'érable.',
       items: [
         { n: 'Lardons', d: 'La version généreuse aux lardons.', p: '13,90 €' },
         { n: 'Saumon', d: 'La version au saumon fumé.', p: '13,90 €' },
       ]
     },
     {
-      cat: 'salee', emoji: '🥯', title: 'Le Crof\'sou', note: 'Sandwich à base de Croffle. 13,90 € — 16,00 € avec Patatarea.',
+      cat: 'salee', emoji: '🥯', title: 'Le Crof\'sou', q: 'Crof\'sou', note: 'Sandwich à base de Croffle. 13,90 € — 16,00 € avec Patatarea.',
       items: [
         { n: 'Lardons', d: 'Croffle garni de lardons, œuf au plat, fromage frais, tomate et figue.', p: '13,90 €' },
         { n: 'Saumon ou Crevettes', d: 'Croffle garni de saumon ou crevettes, œuf au plat, fromage frais, tomate et pesto.', p: '13,90 €' },
@@ -159,9 +159,13 @@
       const items = g.items.map(function (it, ii) {
         const price = parsePrice(it.p);
         const id = g.cat + '-' + gi + '-' + ii;
+        // Nom complet pour le panier ET le ticket imprimé : préfixe le plat quand
+        // le nom de la variante est générique (ex. "Crof'sou Lardons" vs "Dakasoula Lardons"),
+        // pour que la cuisine sache de quel plat il s'agit.
+        const fullName = (g.q ? g.q + ' ' : '') + it.n;
         const addBtn = price != null
-          ? '<button class="add-btn" data-id="' + id + '" data-name="' + escAttr(it.n) +
-              '" data-price="' + price + '" aria-label="Ajouter ' + escAttr(it.n) + ' au panier">+ Ajouter</button>'
+          ? '<button class="add-btn" data-id="' + id + '" data-name="' + escAttr(fullName) +
+              '" data-price="' + price + '" aria-label="Ajouter ' + escAttr(fullName) + ' au panier">+ Ajouter</button>'
           : '';
         return (
           '<div class="menu-item">' +
