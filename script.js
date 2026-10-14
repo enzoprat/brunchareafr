@@ -27,7 +27,7 @@
     {
       cat: 'salee', emoji: '🍳', title: 'Œufs Bénédictes & Brunchie',
       items: [
-        { n: 'Œufs Bénédictes', d: 'Œufs pochés, sauce fromagère maison, sur pains muffins ronds, avec saumon ou bacon au choix.', p: '14,50 €' },
+        { n: 'Œufs Bénédictes', d: 'Œufs pochés, sauce fromagère maison, sur pains muffins ronds, avec saumon ou bacon au choix.', p: '14,50 €', opts: ['Saumon', 'Bacon'] },
         { n: 'Assiette Brunchie', d: 'Œufs brouillés ou au plat, feta, roquette, fruits du moment, crème balsamique, ½ avocat et tartines toastées. Protéine au choix : bacon, saumon, crevette, poulet ou burrata (+2 €).', p: '14,50 €', alt: 'Option veggie avec Patatarea' },
       ]
     },
@@ -67,7 +67,7 @@
       cat: 'salee', emoji: '🥯', title: 'Le Crof\'sou', q: 'Crof\'sou', note: 'Sandwich à base de Croffle. 13,90 € — 16,00 € avec Patatarea.',
       items: [
         { n: 'Lardons', d: 'Croffle garni de lardons, œuf au plat, fromage frais, tomate et figue.', p: '13,90 €' },
-        { n: 'Saumon ou Crevettes', d: 'Croffle garni de saumon ou crevettes, œuf au plat, fromage frais, tomate et pesto.', p: '13,90 €' },
+        { n: 'Saumon / Crevettes', d: 'Croffle garni de saumon ou crevettes, œuf au plat, fromage frais, tomate et pesto.', p: '13,90 €', opts: ['Saumon', 'Crevettes'], optsMode: 'replace' },
       ]
     },
     {
@@ -163,9 +163,19 @@
         // le nom de la variante est générique (ex. "Crof'sou Lardons" vs "Dakasoula Lardons"),
         // pour que la cuisine sache de quel plat il s'agit.
         const fullName = (g.q ? g.q + ' ' : '') + it.n;
+        // Articles "au choix" (ex. Œufs Bénédictes saumon/bacon) : un sélecteur
+        // dont la valeur part dans le panier ET sur le ticket imprimé.
+        const hasOpts = Array.isArray(it.opts) && it.opts.length > 0;
+        const optsSel = hasOpts
+          ? '<select class="menu-item__opt" aria-label="Choix pour ' + escAttr(it.n) + '">' +
+              '<option value="" disabled selected>Au choix…</option>' +
+              it.opts.map(function (o) { return '<option value="' + escAttr(o) + '">' + o + '</option>'; }).join('') +
+            '</select>'
+          : '';
         const addBtn = price != null
           ? '<button class="add-btn" data-id="' + id + '" data-name="' + escAttr(fullName) +
-              '" data-price="' + price + '" aria-label="Ajouter ' + escAttr(fullName) + ' au panier">+ Ajouter</button>'
+              '" data-qualifier="' + escAttr(g.q || '') + '" data-optsmode="' + (it.optsMode || 'append') + '"' +
+              ' data-price="' + price + '" aria-label="Ajouter ' + escAttr(fullName) + ' au panier">+ Ajouter</button>'
           : '';
         return (
           '<div class="menu-item">' +
@@ -176,7 +186,7 @@
             '</div>' +
             (it.d ? '<p class="menu-item__desc">' + it.d + '</p>' : '') +
             (it.alt ? '<p class="menu-item__desc menu-item__alt">' + it.alt + '</p>' : '') +
-            addBtn +
+            (hasOpts ? '<div class="menu-item__actions">' + optsSel + addBtn + '</div>' : addBtn) +
           '</div>'
         );
       }).join('');
@@ -868,7 +878,19 @@
     groupsEl.addEventListener('click', function (e) {
       const btn = e.target.closest('.add-btn');
       if (!btn) return;
-      addToCart(btn.dataset.id, btn.dataset.name, parseFloat(btn.dataset.price));
+      let id = btn.dataset.id;
+      let name = btn.dataset.name;
+      const item = btn.closest('.menu-item');
+      const sel = item ? item.querySelector('.menu-item__opt') : null;
+      if (sel) {
+        if (!sel.value) { alert('Choisissez une option avant d\'ajouter.'); sel.focus(); return; }
+        const choice = sel.value;
+        name = btn.dataset.optsmode === 'replace'
+          ? (btn.dataset.qualifier ? btn.dataset.qualifier + ' ' : '') + choice
+          : name + ' — ' + choice;
+        id = id + '::' + choice; // chaque choix = une ligne de panier distincte
+      }
+      addToCart(id, name, parseFloat(btn.dataset.price));
       openDrawer();
     });
 

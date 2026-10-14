@@ -280,6 +280,14 @@ section { padding: clamp(64px, 9vw, 130px) clamp(20px, 5vw, 48px); }
 }
 .add-btn:hover { background: var(--violet); color: var(--white); transform: translateY(-1px); }
 .add-btn:active { transform: scale(0.96); }
+.menu-item__actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+.menu-item__actions .add-btn { margin-top: 0; }
+.menu-item__opt {
+  font-family: var(--font-body); font-size: 0.84rem; font-weight: 600; color: var(--violet-deep);
+  background: var(--white); border: 1.5px solid var(--violet); border-radius: 100px;
+  padding: 7px 14px; cursor: pointer;
+}
+.menu-item__opt:focus-visible { outline: 2px solid var(--violet); outline-offset: 1px; }
 
 /* ===== WHY ===== */
 .why { background: var(--white); }
