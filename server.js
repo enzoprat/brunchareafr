@@ -550,8 +550,13 @@ app.get('/admin', function (req, res) {
   if (!adminAuth(req, res)) return;
   const qkey = req.query.key || ''; // clé à propager au manifest (app installée)
   const days = Math.min(31, Math.max(1, parseInt(req.query.days, 10) || 7));
-  const since = new Date(Date.now() - days * 864e5).toISOString();
-  const entries = store.list(since).map(toEntry).filter(Boolean);
+  // Affichage basé sur la DATE DE SERVICE (créneau), pas la date de création :
+  // toutes les réservations/commandes à venir restent visibles jusqu'à leur jour,
+  // + les `days` derniers jours passés. Ainsi une résa prise 3 semaines à l'avance
+  // reste au dashboard jusqu'au jour J.
+  const cutoff = dayKey(new Date(Date.now() - days * 864e5).toISOString());
+  const entries = store.list(new Date(0).toISOString()).map(toEntry).filter(Boolean)
+    .filter(function (e) { return dayKey(e.whenIso) >= cutoff; });
   entries.sort(function (a, b) { return a.whenIso < b.whenIso ? -1 : a.whenIso > b.whenIso ? 1 : 0; });
 
   // Regroupe par jour de service
