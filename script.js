@@ -4,15 +4,27 @@
 (function () {
   'use strict';
 
+  /* ---------- CHOIX RÉUTILISABLES ---------- */
+  // Option "avec / sans Patatarea" (change le prix). base = option par défaut.
+  function pat(sans, avec) {
+    return { label: 'Patatarea', required: false, options: [
+      { l: 'Sans Patatarea', p: sans, base: true },
+      { l: 'Avec Patatarea', p: avec }
+    ] };
+  }
+  // Nappage (obligatoire) et topping (optionnel) pour les bases sucrées.
+  const NAPPAGE = { label: 'Nappage', options: ['Fruits rouges', 'Fruit de la passion', 'Nutella', 'Caramel beurre salé', 'Sirop d\'érable', 'Miel'] };
+  const TOPPING = { label: 'Topping', required: false, options: [{ l: 'Sans topping', base: true }, 'Fruits du moment', 'Oreo', 'Spéculoos'] };
+
   /* ---------- DONNÉES MENU ---------- */
   const MENU = [
     {
       cat: 'salee', emoji: '🍔', title: 'Smash Burgers',
       items: [
-        { n: 'Smash Burger Classic', d: 'Steaks smashés, cheddar fondant, salade, tomate, sauce crème maison, oignons confits.', p: '12,50 €', alt: '14,90 € avec Patatarea' },
-        { n: 'Smash Burger Bacon Fines Herbes', d: 'Cheddar fondant, bacon croustillant, sauce crème maison, salade, tomate, oignons confits.', p: '13,50 €', alt: '15,90 € avec Patatarea' },
-        { n: 'Smash Burger Avocado', d: 'Cheddar fondant, guacamole, salade, tomate, sauce crème maison, oignons confits.', p: '13,50 €', alt: '15,90 € avec Patatarea' },
-        { n: 'Smash Burger Chèvre Miel', d: 'Chèvre fondant, miel, salade, tomate, sauce crème maison, oignons confits.', p: '13,50 €', alt: '15,90 € avec Patatarea' },
+        { n: 'Smash Burger Classic', d: 'Steaks smashés, cheddar fondant, salade, tomate, sauce crème maison, oignons confits.', p: '12,50 €', choices: [pat('12,50 €', '14,90 €')] },
+        { n: 'Smash Burger Bacon Fines Herbes', d: 'Cheddar fondant, bacon croustillant, sauce crème maison, salade, tomate, oignons confits.', p: '13,50 €', choices: [pat('13,50 €', '15,90 €')] },
+        { n: 'Smash Burger Avocado', d: 'Cheddar fondant, guacamole, salade, tomate, sauce crème maison, oignons confits.', p: '13,50 €', choices: [pat('13,50 €', '15,90 €')] },
+        { n: 'Smash Burger Chèvre Miel', d: 'Chèvre fondant, miel, salade, tomate, sauce crème maison, oignons confits.', p: '13,50 €', choices: [pat('13,50 €', '15,90 €')] },
       ]
     },
     {
@@ -20,65 +32,68 @@
       items: [
         { n: 'Tartine Avocat & Saumon Fumé', d: 'Pain au levain toasté à l\'huile d\'olive, guacamole, tomate, saumon fumé et fromage frais.', p: '14,00 €' },
         { n: 'Tartine Crevettes', d: 'Pain au levain toasté à l\'huile d\'olive, guacamole, tomate, crevettes et fromage frais.', p: '14,00 €' },
-        { n: 'Tartine Burrata', d: 'Pain au levain toasté, guacamole maison, tomate et burrata au pesto.', p: '15,00 €', alt: 'Complément bacon ou saumon au choix' },
+        { n: 'Tartine Burrata', d: 'Pain au levain toasté, guacamole maison, tomate et burrata au pesto.', p: '15,00 €', choices: [{ label: 'Complément', required: false, options: [{ l: 'Nature', base: true }, 'Bacon', 'Saumon'] }] },
         { n: 'Tartine Œuf Bacon', d: 'Pain au levain toasté, œufs brouillés, bacon croustillant, fromage frais, oignons confits et figue.', p: '14,00 €' },
       ]
     },
     {
       cat: 'salee', emoji: '🍳', title: 'Œufs Bénédictes & Brunchie',
       items: [
-        { n: 'Œufs Bénédictes', d: 'Œufs pochés, sauce fromagère maison, sur pains muffins ronds, avec saumon ou bacon au choix.', p: '14,50 €', opts: ['Saumon', 'Bacon'] },
-        { n: 'Assiette Brunchie', d: 'Œufs brouillés ou au plat, feta, roquette, fruits du moment, crème balsamique, ½ avocat et tartines toastées. Protéine au choix : bacon, saumon, crevette, poulet ou burrata (+2 €).', p: '14,50 €', alt: 'Option veggie avec Patatarea' },
+        { n: 'Œufs Bénédictes', d: 'Œufs pochés, sauce fromagère maison, sur pains muffins ronds, avec saumon ou bacon au choix.', p: '14,50 €', choices: [{ label: 'Garniture', options: ['Saumon', 'Bacon'] }] },
+        { n: 'Assiette Brunchie', d: 'Œufs, feta, roquette, fruits du moment, crème balsamique, ½ avocat et tartines toastées.', p: '14,50 €', choices: [
+          { label: 'Œufs', options: ['Œufs brouillés', 'Œufs au plat'] },
+          { label: 'Protéine', options: ['Bacon', 'Saumon', 'Crevette', 'Poulet', { l: 'Burrata', add: 2 }] }
+        ] },
       ]
     },
     {
       cat: 'salee', emoji: '🥚', title: 'Egg Muffins', q: 'Egg Muffin',
       items: [
-        { n: 'Classique', d: 'Le muffin signature, généreux et fondant.', p: '6,90 €', alt: '9,90 € avec Patatarea' },
-        { n: 'Bacon', d: 'Avec bacon croustillant.', p: '7,90 €', alt: '10,90 € avec Patatarea' },
+        { n: 'Classique', d: 'Le muffin signature, généreux et fondant.', p: '6,90 €', choices: [pat('6,90 €', '9,90 €')] },
+        { n: 'Bacon', d: 'Avec bacon croustillant.', p: '7,90 €', choices: [pat('7,90 €', '10,90 €')] },
       ]
     },
     {
       cat: 'salee', emoji: '🧀', title: 'Crocs Monsieur', q: 'Croc', note: 'Tous nos crocs sont préparés avec emmental et béchamel maison.',
       items: [
-        { n: 'Bacon', d: 'Bacon croustillant, emmental, béchamel maison.', p: '7,90 €', alt: '10,90 € avec Patatarea' },
-        { n: 'Saumon', d: 'Saumon, emmental, béchamel maison.', p: '7,90 €', alt: '10,90 € avec Patatarea' },
-        { n: 'Chèvre-Miel', d: 'Chèvre, miel, emmental, béchamel maison.', p: '7,90 €', alt: '10,90 € avec Patatarea' },
-        { n: 'Poulet', d: 'Poulet, emmental, béchamel maison.', p: '7,90 €', alt: '10,90 € avec Patatarea' },
+        { n: 'Bacon', d: 'Bacon croustillant, emmental, béchamel maison.', p: '7,90 €', choices: [pat('7,90 €', '10,90 €')] },
+        { n: 'Saumon', d: 'Saumon, emmental, béchamel maison.', p: '7,90 €', choices: [pat('7,90 €', '10,90 €')] },
+        { n: 'Chèvre-Miel', d: 'Chèvre, miel, emmental, béchamel maison.', p: '7,90 €', choices: [pat('7,90 €', '10,90 €')] },
+        { n: 'Poulet', d: 'Poulet, emmental, béchamel maison.', p: '7,90 €', choices: [pat('7,90 €', '10,90 €')] },
       ]
     },
     {
       cat: 'salee', emoji: '🌯', title: 'Le Sahbi', q: 'Sahbi', note: 'Msemen (crêpe du Maghreb) farci. 12,90 € — 16,00 € avec Patatarea.',
       items: [
-        { n: 'Poulet Mariné / Feta', d: 'Poulet mariné aux épices et huile d\'olive, fromage frais / feta, abricot et oignons confits.', p: '12,90 €' },
-        { n: 'Viande Hachée / Mozza', d: 'Viande hachée marinée façon tajine, dattes, boursin / mozzarella et oignons confits.', p: '12,90 €' },
-        { n: 'Saumon / Feta', d: 'Saumon, feta, herbes fraîches et oignons confits.', p: '12,90 €' },
-        { n: 'Œufs Brouillés / Mozza', d: 'Œufs brouillés fondants, cumin, mozzarella et oignons confits.', p: '12,90 €' },
+        { n: 'Poulet Mariné / Feta', d: 'Poulet mariné aux épices et huile d\'olive, fromage frais / feta, abricot et oignons confits.', p: '12,90 €', choices: [pat('12,90 €', '16,00 €')] },
+        { n: 'Viande Hachée / Mozza', d: 'Viande hachée marinée façon tajine, dattes, boursin / mozzarella et oignons confits.', p: '12,90 €', choices: [pat('12,90 €', '16,00 €')] },
+        { n: 'Saumon / Feta', d: 'Saumon, feta, herbes fraîches et oignons confits.', p: '12,90 €', choices: [pat('12,90 €', '16,00 €')] },
+        { n: 'Œufs Brouillés / Mozza', d: 'Œufs brouillés fondants, cumin, mozzarella et oignons confits.', p: '12,90 €', choices: [pat('12,90 €', '16,00 €')] },
       ]
     },
     {
       cat: 'salee', emoji: '🥞', title: 'Le Dakasoula', q: 'Dakasoula', note: 'Pancakes faits maison (x3), guacamole, oignons confits, sauce crème maison, cheddar, œuf au plat et sirop d\'érable.',
       items: [
-        { n: 'Lardons', d: 'La version généreuse aux lardons.', p: '13,90 €' },
-        { n: 'Saumon', d: 'La version au saumon fumé.', p: '13,90 €' },
+        { n: 'Lardons', d: 'La version généreuse aux lardons.', p: '13,90 €', choices: [{ label: 'Sirop d\'érable', required: false, options: [{ l: 'Avec sirop d\'érable', base: true }, 'Sans sirop d\'érable'] }] },
+        { n: 'Saumon', d: 'La version au saumon fumé.', p: '13,90 €', choices: [{ label: 'Sirop d\'érable', required: false, options: [{ l: 'Avec sirop d\'érable', base: true }, 'Sans sirop d\'érable'] }] },
       ]
     },
     {
       cat: 'salee', emoji: '🥯', title: 'Le Crof\'sou', q: 'Crof\'sou', note: 'Sandwich à base de Croffle. 13,90 € — 16,00 € avec Patatarea.',
       items: [
-        { n: 'Lardons', d: 'Croffle garni de lardons, œuf au plat, fromage frais, tomate et figue.', p: '13,90 €' },
-        { n: 'Saumon / Crevettes', d: 'Croffle garni de saumon ou crevettes, œuf au plat, fromage frais, tomate et pesto.', p: '13,90 €', opts: ['Saumon', 'Crevettes'], optsMode: 'replace' },
+        { n: 'Lardons', d: 'Croffle garni de lardons, œuf au plat, fromage frais, tomate et figue.', p: '13,90 €', choices: [pat('13,90 €', '16,00 €')] },
+        { n: 'Saumon / Crevettes', d: 'Croffle garni de saumon ou crevettes, œuf au plat, fromage frais, tomate et pesto.', p: '13,90 €', choices: [{ label: 'Garniture', mode: 'replace', options: ['Saumon', 'Crevettes'] }, pat('13,90 €', '16,00 €')] },
       ]
     },
     {
       cat: 'sucree', emoji: '🥞', title: 'Les Bases',
       items: [
-        { n: 'Pancakes', d: 'Moelleux et généreux, à napper et garnir au choix.', p: '9,50 €' },
-        { n: 'Pain Perdu', d: 'Le classique réconfortant, façon maison.', p: '8,50 €' },
-        { n: 'Msemen Gourmand', d: 'Crêpe feuilletée du Maghreb, à base de farine de semoule.', p: '6,90 €' },
+        { n: 'Pancakes', d: 'Moelleux et généreux, à napper et garnir au choix.', p: '9,50 €', choices: [NAPPAGE, TOPPING] },
+        { n: 'Pain Perdu', d: 'Le classique réconfortant, façon maison.', p: '8,50 €', choices: [NAPPAGE, TOPPING] },
+        { n: 'Msemen Gourmand', d: 'Crêpe feuilletée du Maghreb, à base de farine de semoule.', p: '6,90 €', choices: [NAPPAGE, TOPPING] },
         { n: 'Msemen Nature', d: 'Crêpe feuilletée nature.', p: '2,50 €' },
-        { n: 'Croffle', d: 'Gaufre à base de pâte à croissant.', p: '6,90 €' },
-        { n: 'Bol de Muesli', d: 'Fromage blanc au muesli, fruits du moment, miel ou sirop d\'érable.', p: '6,90 €' },
+        { n: 'Croffle', d: 'Gaufre à base de pâte à croissant.', p: '6,90 €', choices: [NAPPAGE, TOPPING] },
+        { n: 'Bol de Muesli', d: 'Fromage blanc au muesli, fruits du moment.', p: '6,90 €', choices: [{ label: 'Accompagnement', options: ['Miel', 'Sirop d\'érable'] }] },
         { n: 'Salade de Fruits', d: 'Salade de fruits du moment.', p: '6,90 €' },
       ]
     },
@@ -163,18 +178,28 @@
         // le nom de la variante est générique (ex. "Crof'sou Lardons" vs "Dakasoula Lardons"),
         // pour que la cuisine sache de quel plat il s'agit.
         const fullName = (g.q ? g.q + ' ' : '') + it.n;
-        // Articles "au choix" (ex. Œufs Bénédictes saumon/bacon) : un sélecteur
-        // dont la valeur part dans le panier ET sur le ticket imprimé.
-        const hasOpts = Array.isArray(it.opts) && it.opts.length > 0;
-        const optsSel = hasOpts
-          ? '<select class="menu-item__opt" aria-label="Choix pour ' + escAttr(it.n) + '">' +
-              '<option value="" disabled selected>Au choix…</option>' +
-              it.opts.map(function (o) { return '<option value="' + escAttr(o) + '">' + o + '</option>'; }).join('') +
-            '</select>'
-          : '';
+        // Choix "au choix" : chaque entrée de it.choices = un sélecteur. La valeur
+        // (et l'éventuel prix) partent dans le panier ET sur le ticket imprimé.
+        const choices = it.choices || [];
+        const selectsHtml = choices.map(function (ch) {
+          const required = ch.required !== false;
+          const mode = ch.mode || 'append';
+          const optsHtml = ch.options.map(function (o) {
+            const label = typeof o === 'string' ? o : o.l;
+            let suffix = '', attrs = '';
+            if (typeof o === 'object') {
+              if (o.p) { suffix = ' (' + o.p + ')'; attrs += ' data-price="' + parsePrice(o.p) + '"'; }
+              else if (o.add) { suffix = ' (+' + String(o.add).replace('.', ',') + ' €)'; attrs += ' data-add="' + o.add + '"'; }
+              if (o.base) attrs += ' data-base="1"';
+            }
+            return '<option value="' + escAttr(label) + '"' + attrs + '>' + label + suffix + '</option>';
+          }).join('');
+          const placeholder = required ? '<option value="" disabled selected>' + (ch.label || 'Au choix') + '…</option>' : '';
+          return '<select class="menu-item__opt" data-mode="' + mode + '" aria-label="' + escAttr((ch.label || 'Choix') + ' pour ' + it.n) + '">' + placeholder + optsHtml + '</select>';
+        }).join('');
         const addBtn = price != null
           ? '<button class="add-btn" data-id="' + id + '" data-name="' + escAttr(fullName) +
-              '" data-qualifier="' + escAttr(g.q || '') + '" data-optsmode="' + (it.optsMode || 'append') + '"' +
+              '" data-qualifier="' + escAttr(g.q || '') + '"' +
               ' data-price="' + price + '" aria-label="Ajouter ' + escAttr(fullName) + ' au panier">+ Ajouter</button>'
           : '';
         return (
@@ -186,7 +211,7 @@
             '</div>' +
             (it.d ? '<p class="menu-item__desc">' + it.d + '</p>' : '') +
             (it.alt ? '<p class="menu-item__desc menu-item__alt">' + it.alt + '</p>' : '') +
-            (hasOpts ? '<div class="menu-item__actions">' + optsSel + addBtn + '</div>' : addBtn) +
+            (selectsHtml ? '<div class="menu-item__actions">' + selectsHtml + addBtn + '</div>' : addBtn) +
           '</div>'
         );
       }).join('');
@@ -880,17 +905,24 @@
       if (!btn) return;
       let id = btn.dataset.id;
       let name = btn.dataset.name;
+      let price = parseFloat(btn.dataset.price);
       const item = btn.closest('.menu-item');
-      const sel = item ? item.querySelector('.menu-item__opt') : null;
-      if (sel) {
+      const sels = item ? Array.prototype.slice.call(item.querySelectorAll('.menu-item__opt')) : [];
+      for (let i = 0; i < sels.length; i++) {
+        const sel = sels[i];
         if (!sel.value) { alert('Choisissez une option avant d\'ajouter.'); sel.focus(); return; }
-        const choice = sel.value;
-        name = btn.dataset.optsmode === 'replace'
-          ? (btn.dataset.qualifier ? btn.dataset.qualifier + ' ' : '') + choice
-          : name + ' — ' + choice;
-        id = id + '::' + choice; // chaque choix = une ligne de panier distincte
+        const opt = sel.selectedOptions[0];
+        const val = sel.value;
+        if (sel.dataset.mode === 'replace') {
+          name = (btn.dataset.qualifier ? btn.dataset.qualifier + ' ' : '') + val;
+        } else if (!opt.dataset.base) {
+          name += ' — ' + val; // on n'ajoute pas l'option par défaut (ex. "Sans Patatarea")
+        }
+        if (opt.dataset.price) price = parseFloat(opt.dataset.price);
+        else if (opt.dataset.add) price += parseFloat(opt.dataset.add);
+        id += '::' + val; // chaque combinaison de choix = une ligne de panier distincte
       }
-      addToCart(id, name, parseFloat(btn.dataset.price));
+      addToCart(id, name, price);
       openDrawer();
     });
 
